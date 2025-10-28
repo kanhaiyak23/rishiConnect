@@ -39,6 +39,14 @@
         {
           "photosPermission": "The app accesses your photos to let you set your profile picture."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#FF6B6B",
+          "defaultChannel": "default"
+        }
       ]
     ],
     "extra": {

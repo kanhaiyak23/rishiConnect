@@ -3,9 +3,11 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { Provider, useSelector, useDispatch } from 'react-redux'
-
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { store } from './redux/store'
 import { checkSession } from './redux/slices/authSlice'
+// import { updatePushToken } from './redux/slices/profileSlice'
+// import NotificationService from './lib/notificationService'
 
 import * as Linking from 'expo-linking';
 import { Alert } from 'react-native';
@@ -26,10 +28,11 @@ import SettingsScreen from './screens/SettingsScreen'
 const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
 
-import { View, Button, Text } from 'react-native';
+import { View, Button, Text, TouchableOpacity } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { supabase } from './lib/supabase';
+import RishiConnectLogo from './RishiConnectLogo';
 WebBrowser.maybeCompleteAuthSession();
 
 function AuthStack() {
@@ -51,8 +54,14 @@ function MainTabs() {
         tabBarActiveTintColor: '#FF6B6B',
         tabBarInactiveTintColor: '#999',
         tabBarStyle: {
-          paddingBottom: 5,
-          height: 60,
+          paddingBottom: 8,
+          height: 65,
+          borderTopWidth: 1,
+          borderTopColor: '#F0F0F0',
+        },
+        tabBarLabelStyle: {
+          fontWeight: '600',
+          fontSize: 12,
         },
       }}
     >
@@ -61,7 +70,7 @@ function MainTabs() {
         component={DiscoveryScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 24, color: color }}>✨</Text>
+            <Text style={{ fontSize: 26, color: color }}>✨</Text>
           ),
         }}
       />
@@ -70,7 +79,7 @@ function MainTabs() {
         component={ChatsScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 24, color: color }}>💬</Text>
+            <Text style={{ fontSize: 26, color: color }}>💬</Text>
           ),
         }}
       />
@@ -79,7 +88,7 @@ function MainTabs() {
         component={ProfileScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 24, color: color }}>👤</Text>
+            <Text style={{ fontSize: 26, color: color }}>👤</Text>
           ),
         }}
       />
@@ -94,34 +103,29 @@ function AppNavigator() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    
-
     dispatch(checkSession()).finally(() => {
       setIsLoading(false)
     })
   }, [dispatch])
 
   if (isLoading) {
-    return (
-      <Stack.Navigator>
-        <Stack.Screen 
-          name="Splash" 
-          component={SplashScreen}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    )
+    return <SplashScreen />
   }
+
+  
+
+  
 
   return (
     <Stack.Navigator>
       {!session ? (
+        
         <Stack.Screen name="Auth" component={AuthStack} />
       ) : !profile?.is_complete ? (
         <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       ) : (
         <>
-          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
           <Stack.Screen 
             name="Chat" 
             component={ChatScreen}
@@ -145,10 +149,14 @@ function AppNavigator() {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
+   <Provider store={store}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <SafeAreaView style={{ flex: 1 }}>
+            <AppNavigator />
+          </SafeAreaView>
+        </NavigationContainer>
+      </SafeAreaProvider>
     </Provider>
 )
 }

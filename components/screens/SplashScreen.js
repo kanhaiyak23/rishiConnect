@@ -1,48 +1,66 @@
-import React, { useEffect } from 'react'
-import { View, Text, StyleSheet, Image } from 'react-native'
+import React, { useEffect, useRef } from 'react'
+import { View, StyleSheet, Animated } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import RishiConnectLogo from '../RishiConnectLogo'
 
 export default function SplashScreen({ navigation }) {
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const scaleAnim = useRef(new Animated.Value(0.8)).current
+
   useEffect(() => {
+    // Animate logo appearance
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start()
+
+    // Navigate after delay
     const timer = setTimeout(() => {
-      navigation.replace('Welcome')
-    }, 2000)
+      // Navigation is handled by App.js based on auth state
+    }, 2500)
 
     return () => clearTimeout(timer)
   }, [])
 
   return (
-    <View style={styles.container}>
-      <Image 
-        source={require('../../assets/icon.png')} 
-        style={styles.logo}
-      />
-      <Text style={styles.title}>RishiConnect</Text>
-      <Text style={styles.subtitle}>Connect with fellow students</Text>
-    </View>
+    <LinearGradient
+      colors={['#FF6B9D', '#FF8B6B', '#FFA855']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
+      <Animated.View
+        style={[
+          styles.logoContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
+      >
+        <RishiConnectLogo size="xlarge" showIcon={true} />
+      </Animated.View>
+    </LinearGradient>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FF6B6B',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    opacity: 0.9,
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 })

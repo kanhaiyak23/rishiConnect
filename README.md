@@ -118,6 +118,7 @@ CREATE POLICY "Users can insert own swipes" ON swipes FOR INSERT WITH CHECK (aut
 
 -- RLS Policies for Matches
 CREATE POLICY "Users can view own matches" ON matches FOR SELECT USING (auth.uid() = user_id OR auth.uid() = matched_user_id);
+CREATE POLICY "Users can insert own matches" ON matches FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- RLS Policies for Chat Rooms
 CREATE POLICY "Users can view own chat rooms" ON chat_rooms FOR SELECT USING (auth.uid() = user1_id OR auth.uid() = user2_id);

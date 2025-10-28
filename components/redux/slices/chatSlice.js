@@ -51,6 +51,7 @@ export const sendMessage = createAsyncThunk(
           room_id: roomId,
           sender_id: senderId,
           message,
+          status: 'sent', // Add status field
         })
         .select()
         .single()
@@ -62,11 +63,101 @@ export const sendMessage = createAsyncThunk(
         .from('chat_rooms')
         .update({ 
           updated_at: new Date().toISOString(),
-          last_message: message // We fixed this in the previous step
+          last_message: message
         })
         .eq('id', roomId)
       
       return data
+    } catch (error) {
+      return rejectWithValue(error.message)
+    }
+  }
+)
+
+export const updateMessageStatus = createAsyncThunk(
+  'chat/updateMessageStatus',
+  async ({ messageId, status }, { rejectWithValue }) => {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .update({ status })
+        .eq('id', messageId)
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data
+    } catch (error) {
+      return rejectWithValue(error.message)
+    }
+  }
+)
+
+export const sendTypingIndicator = createAsyncThunk(
+  'chat/sendTypingIndicator',
+  async ({ roomId, userId, isTyping }, { rejectWithValue }) => {
+    try {
+      const { error } = await supabase
+        .from('typing_indicators')
+        .upsert({
+          room_id: roomId,
+          user_id: userId,
+          is_typing: isTyping,
+          updated_at: new Date().toISOString()
+        })
+      
+      if (error) throw error
+      return { roomId, userId, isTyping }
+    } catch (error) {
+      return rejectWithValue(error.message)
+    }
+  }
+)
+
+export const unmatchUser = createAsyncThunk(
+  'chat/unmatchUser',
+  async ({ roomId, userId, matchedUserId }, { rejectWithValue }) => {
+    try {
+      // Delete the chat room
+      const { error: roomError } = await supabase
+        .from('chat_rooms')
+        .delete()
+        .eq('id', roomId)
+      
+      if (roomError) throw roomError
+
+      // Delete the match record (both directions)
+      const { error: matchError1 } = await supabase
+        .from('matches')
+        .delete()
+        .eq('user_id', userId)
+        .eq('matched_user_id', matchedUserId)
+      
+      const { error: matchError2 } = await supabase
+        .from('matches')
+        .delete()
+        .eq('user_id', matchedUserId)
+        .eq('matched_user_id', userId)
+      
+      if (matchError1 || matchError2) throw matchError1 || matchError2
+
+      // Delete all messages in the room
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('room_id', roomId)
+      
+      if (messagesError) throw messagesError
+
+      // Delete typing indicators
+      const { error: typingError } = await supabase
+        .from('typing_indicators')
+        .delete()
+        .eq('room_id', roomId)
+      
+      if (typingError) throw typingError
+
+      return { roomId }
     } catch (error) {
       return rejectWithValue(error.message)
     }
@@ -79,6 +170,7 @@ const chatSlice = createSlice({
     chatRooms: [],
     currentRoom: null,
     messages: [],
+    typingUsers: [], // Array of user IDs who are currently typing
     loading: false,
     error: null,
   },
@@ -97,6 +189,16 @@ const chatSlice = createSlice({
     clearMessages: (state) => {
       state.messages = []
       state.currentRoom = null
+      state.typingUsers = []
+    },
+    updateTypingUsers: (state, action) => {
+      state.typingUsers = action.payload
+    },
+    updateMessageInState: (state, action) => {
+      const messageIndex = state.messages.findIndex(m => m.id === action.payload.id)
+      if (messageIndex !== -1) {
+        state.messages[messageIndex] = action.payload
+      }
     },
   },
   extraReducers: (builder) => {
@@ -126,10 +228,28 @@ const chatSlice = createSlice({
         //   state.messages.push(action.payload)
         // }
       })
+      .addCase(updateMessageStatus.fulfilled, (state, action) => {
+        const messageIndex = state.messages.findIndex(m => m.id === action.payload.id)
+        if (messageIndex !== -1) {
+          state.messages[messageIndex].status = action.payload.status
+        }
+      })
+      .addCase(sendTypingIndicator.fulfilled, (state, action) => {
+        // Typing indicator is handled via real-time subscription
+      })
+      .addCase(unmatchUser.fulfilled, (state, action) => {
+        // Remove the chat room from the list
+        state.chatRooms = state.chatRooms.filter(room => room.id !== action.payload.roomId)
+        // Clear messages if this was the current room
+        if (state.currentRoom?.id === action.payload.roomId) {
+          state.messages = []
+          state.currentRoom = null
+        }
+      })
   },
 })
 
-export const { setCurrentRoom, addMessage, clearMessages } = chatSlice.actions
+export const { setCurrentRoom, addMessage, clearMessages, updateTypingUsers, updateMessageInState } = chatSlice.actions
 export default chatSlice.reducer
 
 

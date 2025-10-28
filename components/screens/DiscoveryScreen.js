@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { fetchPotentialMatches, swipeUser, clearRecentMatch } from '../redux/slices/discoverySlice'
 // +++ Import useFocusEffect +++
 import { useFocusEffect } from '@react-navigation/native'
+import RishiConnectLogo from '../RishiConnectLogo'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -158,7 +159,7 @@ export default function DiscoveryScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Discover</Text>
+        <RishiConnectLogo size="small" showIcon={true} />
       </View>
 
       <View style={styles.cardContainer}>
@@ -213,15 +214,15 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingBottom: 15,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FF6B6B',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardContainer: {
     flex: 1,
@@ -232,13 +233,13 @@ const styles = StyleSheet.create({
   card: {
     width: SCREEN_WIDTH - 40,
     height: 600,
-    borderRadius: 20,
+    borderRadius: 25,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
     overflow: 'hidden',
   },
   cardImage: {
@@ -294,30 +295,40 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
   },
   skipButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: '#FFFFFF',
     borderWidth: 3,
     borderColor: '#FF6B6B',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 30,
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   skipButtonText: {
-    fontSize: 30,
+    fontSize: 32,
     color: '#FF6B6B',
   },
   connectButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: '#FF6B6B',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
   connectButtonText: {
-    fontSize: 30,
+    fontSize: 32,
   },
   emptyContainer: {
     flex: 1,

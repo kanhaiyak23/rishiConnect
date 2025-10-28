@@ -1,12 +1,13 @@
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import RishiConnectLogo from '../RishiConnectLogo'
 
 export default function WelcomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Welcome to</Text>
-        <Text style={styles.appName}>RishiConnect</Text>
+        <RishiConnectLogo size="xlarge" />
         <Text style={styles.description}>
           Connect with fellow Rishihood University students and build meaningful relationships
         </Text>
@@ -16,6 +17,7 @@ export default function WelcomeScreen({ navigation }) {
         <TouchableOpacity
           style={styles.primaryButton}
           onPress={() => navigation.navigate('Login')}
+          activeOpacity={0.8}
         >
           <Text style={styles.primaryButtonText}>Login</Text>
         </TouchableOpacity>
@@ -23,6 +25,7 @@ export default function WelcomeScreen({ navigation }) {
         <TouchableOpacity
           style={styles.secondaryButton}
           onPress={() => navigation.navigate('SignUp')}
+          activeOpacity={0.8}
         >
           <Text style={styles.secondaryButtonText}>Sign Up</Text>
         </TouchableOpacity>
@@ -43,21 +46,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
   },
   title: {
-    fontSize: 24,
-    color: '#666',
+    fontSize: 26,
+    color: '#333',
+    fontWeight: '300',
     marginBottom: 10,
-  },
-  appName: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    color: '#FF6B6B',
-    marginBottom: 20,
+    letterSpacing: 0.5,
   },
   description: {
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
     lineHeight: 24,
+    marginTop: 20,
+    paddingHorizontal: 10,
   },
   buttonContainer: {
     paddingHorizontal: 30,
@@ -65,20 +66,26 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: '#FF6B6B',
-    padding: 16,
-    borderRadius: 25,
+    padding: 18,
+    borderRadius: 30,
     alignItems: 'center',
     marginBottom: 15,
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   secondaryButton: {
     backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 25,
+    padding: 18,
+    borderRadius: 30,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FF6B6B',
@@ -86,6 +93,7 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: '#FF6B6B',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 })

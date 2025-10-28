@@ -67,14 +67,21 @@ export const swipeUser = createAsyncThunk(
           .single()
         
         if (matchCheck) {
+           console.log('✅ Match detected between:', userId, targetUserId)
           // It's a match!
-          // 3. Create the match record
+          // 3. Create the match record for BOTH users
           await supabase
             .from('matches')
-            .insert({
-              user_id: userId,
-              matched_user_id: targetUserId,
-            })
+            .insert([
+              {
+                user_id: userId,
+                matched_user_id: targetUserId,
+              },
+              {
+                user_id: targetUserId,
+                matched_user_id: userId,
+              }
+            ])
           
           // 4. Create the chat room
           await supabase

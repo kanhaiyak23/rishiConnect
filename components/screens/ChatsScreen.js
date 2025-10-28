@@ -48,16 +48,43 @@ export default function ChatsScreen() {
         dispatch(fetchChatRooms(user.id))
       }
 
-      // +++ FIX: Set up real-time subscription +++
+      // Set up real-time subscription for chat rooms
       const channel = supabase
         .channel('public:chat_rooms')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_rooms',
+            // Listen for new chat rooms where this user is user1
+            filter: `user1_id=eq.${user?.id}`, 
+          },
+          (payload) => {
+            // Re-fetch chat rooms when a new room is created
+            dispatch(fetchChatRooms(user.id))
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_rooms',
+            // Listen for new chat rooms where this user is user2
+            filter: `user2_id=eq.${user?.id}`,
+          },
+          (payload) => {
+            dispatch(fetchChatRooms(user.id))
+          }
+        )
         .on(
           'postgres_changes',
           {
             event: 'UPDATE',
             schema: 'public',
             table: 'chat_rooms',
-            // Listen for updates where this user is user1 or user2
+            // Listen for updates where this user is user1
             filter: `user1_id=eq.${user?.id}`, 
           },
           (payload) => {
@@ -152,15 +179,21 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingBottom: 15,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontWeight: '700',
     color: '#FF6B6B',
+    letterSpacing: 0.5,
   },
   list: {
     padding: 10,
@@ -170,13 +203,13 @@ const styles = StyleSheet.create({
     padding: 15,
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    borderRadius: 15,
     marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
   },
   avatar: {
     width: 60,
