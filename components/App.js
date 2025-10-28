@@ -24,6 +24,7 @@ import ChatsScreen from './screens/ChatsScreen'
 import ChatScreen from './screens/ChatScreen'
 import ProfileScreen from './screens/ProfileScreen'
 import SettingsScreen from './screens/SettingsScreen'
+import EditProfileScreen from './screens/EditProfileScreen'
 
 const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -101,14 +102,34 @@ function AppNavigator() {
   const { session, user } = useSelector((state) => state.auth)
   const { profile } = useSelector((state) => state.profile)
   const [isLoading, setIsLoading] = useState(true)
+  const [minimumLoadingTime, setMinimumLoadingTime] = useState(true)
 
   useEffect(() => {
-    dispatch(checkSession()).finally(() => {
-      setIsLoading(false)
-    })
+    const loadData = async () => {
+      const startTime = Date.now()
+      
+      // Check session
+      await dispatch(checkSession()).finally(() => {
+        setIsLoading(false)
+      })
+
+      // Ensure minimum 3 seconds display time
+      const elapsedTime = Date.now() - startTime
+      const remainingTime = Math.max(0, 2000 - elapsedTime)
+      
+      if (remainingTime > 0) {
+        setTimeout(() => {
+          setMinimumLoadingTime(false)
+        }, remainingTime)
+      } else {
+        setMinimumLoadingTime(false)
+      }
+    }
+
+    loadData()
   }, [dispatch])
 
-  if (isLoading) {
+  if (isLoading || minimumLoadingTime) {
     return <SplashScreen />
   }
 
@@ -126,6 +147,11 @@ function AppNavigator() {
       ) : (
         <>
           <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="EditProfile" 
+            component={EditProfileScreen}
+            options={{ headerShown: true, title: 'Edit Profile' }}
+          />
           <Stack.Screen 
             name="Chat" 
             component={ChatScreen}
