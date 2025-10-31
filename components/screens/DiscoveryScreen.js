@@ -9,6 +9,8 @@ import {
   Image,
   ActivityIndicator, // Import ActivityIndicator
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import LottieView from 'lottie-react-native'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchPotentialMatches, swipeUser, clearRecentMatch } from '../redux/slices/discoverySlice'
 // +++ Import useFocusEffect +++
@@ -119,6 +121,11 @@ export default function DiscoveryScreen({ navigation }) {
       outputRange: [0, 1, 0],
     })
 
+    const scale = translateX.interpolate({
+      inputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
+      outputRange: [0.95, 1, 0.95],
+    })
+
     return (
       <Animated.View
         style={[
@@ -127,6 +134,8 @@ export default function DiscoveryScreen({ navigation }) {
             transform: [
               { translateX },
               { rotate: rotateStr },
+              { perspective: 1000 },
+              { scale },
             ],
             opacity,
           },
@@ -157,7 +166,12 @@ export default function DiscoveryScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
       <View style={styles.header}>
         <RishiConnectLogo size="small" showIcon={true} />
       </View>
@@ -179,7 +193,14 @@ export default function DiscoveryScreen({ navigation }) {
       {/* +++ FIX: This modal will now have access to recentMatch.name +++ */}
       {recentMatch && (
         <View style={styles.matchModal}>
-          <View style={styles.matchContent}>
+          {/* Confetti animation - ensure assets/lottie/confetti.json exists */}
+          <LottieView
+            source={require('../../assets/lottie/confetti.json')}
+            autoPlay
+            loop={false}
+            style={styles.confetti}
+          />
+          <LinearGradient colors={['#ffffff', '#f8f8ff']} style={styles.matchContent}>
             <Text style={styles.matchTitle}>🎉 It's a Match!</Text>
             <Text style={styles.matchText}>
               You and {recentMatch.name} are now connected
@@ -199,17 +220,16 @@ export default function DiscoveryScreen({ navigation }) {
             >
               <Text style={styles.matchButtonSecondaryText}>Keep Swiping</Text>
             </TouchableOpacity>
-          </View>
+          </LinearGradient>
         </View>
       )}
-    </View>
+    </LinearGradient>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     paddingTop: 60,
@@ -236,10 +256,10 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 12,
     overflow: 'hidden',
   },
   cardImage: {
@@ -354,11 +374,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   matchContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 40,
     alignItems: 'center',
     width: SCREEN_WIDTH - 60,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+  },
+  confetti: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   matchTitle: {
     fontSize: 32,

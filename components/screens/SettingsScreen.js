@@ -7,6 +7,8 @@ import {
   Switch,
   Alert,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { BlurView } from 'expo-blur'
 
 export default function SettingsScreen({ navigation }) {
   const showComingSoon = () => {
@@ -14,13 +16,18 @@ export default function SettingsScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Settings</Text>
       </View>
 
       <View style={styles.content}>
-        <View style={styles.section}>
+        <BlurView intensity={60} style={styles.section}>
           <Text style={styles.sectionTitle}>Notifications</Text>
           
           <View style={styles.settingItem}>
@@ -38,9 +45,9 @@ export default function SettingsScreen({ navigation }) {
               onValueChange={showComingSoon}
             />
           </View>
-        </View>
+        </BlurView>
 
-        <View style={styles.section}>
+        <BlurView intensity={60} style={styles.section}>
           <Text style={styles.sectionTitle}>Privacy</Text>
           
           <TouchableOpacity style={styles.settingItem}>
@@ -52,9 +59,9 @@ export default function SettingsScreen({ navigation }) {
             <Text style={styles.settingLabel}>Report a Problem</Text>
             <Text style={styles.settingArrow}>›</Text>
           </TouchableOpacity>
-        </View>
+        </BlurView>
 
-        <View style={styles.section}>
+        <BlurView intensity={60} style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           
           <View style={styles.settingItem}>
@@ -71,7 +78,7 @@ export default function SettingsScreen({ navigation }) {
             <Text style={styles.settingLabel}>Privacy Policy</Text>
             <Text style={styles.settingArrow}>›</Text>
           </TouchableOpacity>
-        </View>
+        </BlurView>
 
         <TouchableOpacity
           style={styles.deleteButton}
@@ -83,14 +90,13 @@ export default function SettingsScreen({ navigation }) {
           <Text style={styles.deleteButtonText}>Delete Account</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   header: {
     paddingTop: 60,
@@ -110,10 +116,12 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    borderRadius: 18,
     marginBottom: 20,
     padding: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)'
   },
   sectionTitle: {
     fontSize: 16,
@@ -142,9 +150,9 @@ const styles = StyleSheet.create({
     color: '#CCC',
   },
   deleteButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.6)',
     padding: 16,
-    borderRadius: 10,
+    borderRadius: 18,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FF6B6B',

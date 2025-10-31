@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   Alert,
   Image,
 } from 'react-native'
+import Animated, { useSharedValue, withDelay, withSpring, withTiming, useAnimatedStyle } from 'react-native-reanimated'
+import { LinearGradient } from 'expo-linear-gradient'
+import { BlurView } from 'expo-blur'
 import * as ImagePicker from 'expo-image-picker'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateProfile } from '../redux/slices/profileSlice'
@@ -18,6 +21,8 @@ import { supabase } from '../lib/supabase'
 
 // +++ IMPORT THE DECODER +++
 import { decode } from 'base64-arraybuffer'
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
 export default function ProfileSetupScreen({ navigation, route }) {
   const dispatch = useDispatch()
@@ -145,14 +150,37 @@ export default function ProfileSetupScreen({ navigation, route }) {
     }
   }
 
+  const titleY = useSharedValue(30)
+  const titleOpacity = useSharedValue(0)
+  const contentOpacity = useSharedValue(0)
+
+  useEffect(() => {
+    titleY.value = withDelay(150, withSpring(0))
+    titleOpacity.value = withDelay(150, withTiming(1, { duration: 400 }))
+    contentOpacity.value = withDelay(300, withTiming(1, { duration: 400 }))
+  }, [])
+
+  const titleStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: titleY.value }],
+    opacity: titleOpacity.value,
+  }))
+
+  const contentStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }))
+
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Complete Your Profile</Text>
-        <Text style={styles.subtitle}>Tell others about yourself</Text>
+        <Animated.Text style={[styles.title, titleStyle]}>Complete Your Profile</Animated.Text>
+        <Animated.Text style={[styles.subtitle, contentStyle]}>Tell others about yourself</Animated.Text>
 
         {step === 1 && (
           <>
+            <Animated.View style={contentStyle}>
             <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
               {photo ? (
                 // +++ USE photo.uri TO DISPLAY THE IMAGE +++
@@ -161,49 +189,65 @@ export default function ProfileSetupScreen({ navigation, route }) {
                 <Text style={styles.photoText}>📷 Add Photo</Text>
               )}
             </TouchableOpacity>
+            </Animated.View>
 
-            <TextInput
-              style={styles.textArea}
-              placeholder="Write a short bio..."
-              value={bio}
-              onChangeText={setBio}
-              multiline
-              numberOfLines={4}
-              maxLength={200}
-            />
+            <BlurView intensity={60} style={styles.glassField}>
+              <TextInput
+                style={styles.textArea}
+                placeholder="Write a short bio..."
+                value={bio}
+                onChangeText={setBio}
+                multiline
+                numberOfLines={4}
+                maxLength={200}
+                placeholderTextColor="#888"
+              />
+            </BlurView>
 
-            <TouchableOpacity
+            <AnimatedTouchable
               style={styles.nextButton}
               onPress={() => setStep(2)}
+              activeOpacity={0.85}
             >
-              <Text style={styles.nextButtonText}>Next</Text>
-            </TouchableOpacity>
+              <LinearGradient colors={['#667eea', '#764ba2']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 16, borderRadius: 25, width: '100%', alignItems: 'center' }}>
+                <Text style={styles.nextButtonText}>Next</Text>
+              </LinearGradient>
+            </AnimatedTouchable>
           </>
         )}
 
         {step === 2 && (
           <>
-            <TextInput
-              style={styles.input}
-              placeholder="Academic Year (e.g., 2024)"
-              value={year}
-              onChangeText={setYear}
-              keyboardType="numeric"
-            />
+            <BlurView intensity={60} style={styles.glassField}>
+              <TextInput
+                style={styles.input}
+                placeholder="Academic Year (e.g., 2024)"
+                value={year}
+                onChangeText={setYear}
+                keyboardType="numeric"
+                placeholderTextColor="#888"
+              />
+            </BlurView>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Major/Department"
-              value={major}
-              onChangeText={setMajor}
-            />
+            <BlurView intensity={60} style={styles.glassField}>
+              <TextInput
+                style={styles.input}
+                placeholder="Major/Department"
+                value={major}
+                onChangeText={setMajor}
+                placeholderTextColor="#888"
+              />
+            </BlurView>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Interests (comma separated, e.g., coding, cricket)"
-              value={interests}
-              onChangeText={setInterests}
-            />
+            <BlurView intensity={60} style={styles.glassField}>
+              <TextInput
+                style={styles.input}
+                placeholder="Interests (comma separated, e.g., coding, cricket)"
+                value={interests}
+                onChangeText={setInterests}
+                placeholderTextColor="#888"
+              />
+            </BlurView>
 
             <View style={styles.buttonRow}>
               <TouchableOpacity
@@ -226,14 +270,21 @@ export default function ProfileSetupScreen({ navigation, route }) {
           </>
         )}
       </ScrollView>
-    </View>
+    </LinearGradient>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  glassField: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.2)'
   },
   content: {
     flex: 1,
@@ -300,17 +351,15 @@ const styles = StyleSheet.create({
     borderColor: '#E8E8E8',
   },
   nextButton: {
-    backgroundColor: '#FF6B6B',
-    padding: 18,
-    borderRadius: 30,
-    alignItems: 'center',
-    marginTop: 20,
-    shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
+  borderRadius: 30,
+  alignItems: 'center',
+  marginTop: 20,
+  shadowColor: '#764ba2',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.25,
+  shadowRadius: 8,
+  elevation: 5,
+},
   nextButtonText: {
     color: '#FFFFFF',
     fontSize: 18,

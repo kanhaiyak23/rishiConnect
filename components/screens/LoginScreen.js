@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -7,8 +7,13 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native'
+import Animated, { useSharedValue, withDelay, withSpring, withTiming, useAnimatedStyle } from 'react-native-reanimated'
+import { LinearGradient } from 'expo-linear-gradient'
+import { BlurView } from 'expo-blur'
 import { useDispatch, useSelector } from 'react-redux'
 import { signIn, signInWithGoogle } from '../redux/slices/authSlice'
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
 export default function LoginScreen({ navigation }) {
   const dispatch = useDispatch()
@@ -60,28 +65,63 @@ export default function LoginScreen({ navigation }) {
     }
   }
 
+  const titleY = useSharedValue(30)
+  const titleOpacity = useSharedValue(0)
+  const formOpacity = useSharedValue(0)
+  const buttonY = useSharedValue(40)
+
+  useEffect(() => {
+    titleY.value = withDelay(150, withSpring(0))
+    titleOpacity.value = withDelay(150, withTiming(1, { duration: 400 }))
+    formOpacity.value = withDelay(300, withTiming(1, { duration: 400 }))
+    buttonY.value = withDelay(450, withSpring(0))
+  }, [])
+
+  const titleStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: titleY.value }],
+    opacity: titleOpacity.value,
+  }))
+
+  const formStyle = useAnimatedStyle(() => ({ opacity: formOpacity.value }))
+  const buttonStyle = useAnimatedStyle(() => ({ transform: [{ translateY: buttonY.value }] }))
+
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
       <View style={styles.content}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Login to continue</Text>
+        <Animated.Text style={[styles.title, titleStyle]}>Welcome Back</Animated.Text>
+        <Animated.Text style={[styles.subtitle, formStyle]}>Login to continue</Animated.Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="University Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+        <Animated.View style={formStyle}>
+          <BlurView intensity={60} style={styles.glassField}>
+            <TextInput
+              style={styles.input}
+              placeholder="University Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholderTextColor="#888"
+            />
+          </BlurView>
+        </Animated.View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <Animated.View style={formStyle}>
+          <BlurView intensity={60} style={styles.glassField}>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholderTextColor="#888"
+            />
+          </BlurView>
+        </Animated.View>
 
         <TouchableOpacity
           onPress={() => Alert.alert('Info', 'Forgot password functionality coming soon')}
@@ -90,15 +130,23 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+        <AnimatedTouchable
+          style={[styles.primaryButton, buttonStyle]}
           onPress={handleLogin}
           disabled={loading}
+          activeOpacity={0.85}
         >
-          <Text style={styles.buttonText}>
-            {loading ? 'Logging in...' : 'Login'}
-          </Text>
-        </TouchableOpacity>
+          <LinearGradient
+            colors={['#667eea', '#764ba2']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradientButton}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? 'Logging in...' : 'Login'}
+            </Text>
+          </LinearGradient>
+        </AnimatedTouchable>
 
         <View style={styles.divider}>
           <View style={styles.dividerLine} />
@@ -106,13 +154,16 @@ export default function LoginScreen({ navigation }) {
           <View style={styles.dividerLine} />
         </View>
 
-        <TouchableOpacity
-          style={styles.googleButton}
+        <AnimatedTouchable
+          style={[styles.googleButton, buttonStyle]}
           onPress={handleGoogleSignIn}
           disabled={loading}
+          activeOpacity={0.85}
         >
-          <Text style={styles.googleButtonText}>🔵 Continue with Google</Text>
-        </TouchableOpacity>
+          <BlurView intensity={70} style={styles.glassButton}>
+            <Text style={styles.googleButtonText}>🔵 Continue with Google</Text>
+          </BlurView>
+        </AnimatedTouchable>
 
         <TouchableOpacity
           onPress={() => navigation.navigate('SignUp')}
@@ -123,14 +174,13 @@ export default function LoginScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
@@ -150,14 +200,18 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     fontWeight: '300',
   },
-  input: {
-    backgroundColor: '#F8F8F8',
-    padding: 18,
-    borderRadius: 15,
+  glassField: {
+    borderRadius: 16,
+    overflow: 'hidden',
     marginBottom: 15,
-    fontSize: 16,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.2)'
+  },
+  input: {
+    padding: 16,
+    fontSize: 16,
+    color: '#222',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -167,17 +221,20 @@ const styles = StyleSheet.create({
     color: '#FF6B6B',
     fontSize: 14,
   },
-  button: {
-    backgroundColor: '#FF6B6B',
-    padding: 18,
+  primaryButton: {
     borderRadius: 30,
-    alignItems: 'center',
+    overflow: 'hidden',
     marginTop: 10,
-    shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowColor: '#764ba2',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  gradientButton: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -204,18 +261,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   googleButton: {
-    backgroundColor: '#FFFFFF',
-    padding: 18,
     borderRadius: 30,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#4285F4',
+    overflow: 'hidden',
     marginBottom: 20,
-    shadowColor: '#4285F4',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 2,
+    borderColor: 'rgba(66,133,244,0.4)',
+  },
+  glassButton: {
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.25)'
   },
   googleButtonText: {
     color: '#4285F4',

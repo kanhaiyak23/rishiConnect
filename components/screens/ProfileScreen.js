@@ -8,6 +8,8 @@ import {
   ScrollView,
   Alert,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { BlurView } from 'expo-blur'
 import { useDispatch, useSelector } from 'react-redux'
 import { signOut } from '../redux/slices/authSlice'
 import { fetchProfile } from '../redux/slices/profileSlice'
@@ -41,13 +43,18 @@ export default function ProfileScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={styles.profileSection}>
+        <BlurView intensity={60} style={styles.profileCard}>
           <Image
             source={{ uri: profile?.photo_url || 'https://via.placeholder.com/120' }}
             style={styles.avatar}
@@ -73,7 +80,7 @@ export default function ProfileScreen({ navigation }) {
               </View>
             </View>
           )}
-        </View>
+        </BlurView>
 
         <View style={styles.actionsSection}>
           <TouchableOpacity
@@ -100,7 +107,7 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </LinearGradient>
   )
 }
 
@@ -131,9 +138,14 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  profileSection: {
+  profileCard: {
     alignItems: 'center',
     padding: 30,
+    borderRadius: 20,
+    margin: 20,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)'
   },
   avatar: {
     width: 120,

@@ -9,6 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchMessages, sendMessage, addMessage } from '../redux/slices/chatSlice'
 import { supabase } from '../lib/supabase'
@@ -23,7 +25,13 @@ export default function ChatScreen({ route }) {
   const flatListRef = useRef(null)
 
   const otherUser = user.id === room.user1_id ? room.user2 : room.user1
-
+  const dot1 = useSharedValue(0.4)
+  const dot2 = useSharedValue(0.4)
+  const dot3 = useSharedValue(0.4)
+  // Define animated styles here — at top level
+const dot1Style = useAnimatedStyle(() => ({ opacity: dot1.value }))
+const dot2Style = useAnimatedStyle(() => ({ opacity: dot2.value }))
+const dot3Style = useAnimatedStyle(() => ({ opacity: dot3.value }))
   useEffect(() => {
     dispatch(fetchMessages(room.id))
 
@@ -48,6 +56,11 @@ export default function ChatScreen({ route }) {
       flatListRef.current?.scrollToEnd({ animated: true })
     }
   }, [messages])
+  useEffect(() => {
+    dot1.value = withRepeat(withSequence(withTiming(1, { duration: 500 }), withTiming(0.4, { duration: 500 })), -1)
+    dot2.value = withRepeat(withSequence(withTiming(1, { duration: 500, delay: 150 }), withTiming(0.4, { duration: 500 })), -1)
+    dot3.value = withRepeat(withSequence(withTiming(1, { duration: 500, delay: 300 }), withTiming(0.4, { duration: 500 })), -1)
+  }, [])
 
   const handleSend = async () => {
     if (!messageText.trim()) return
@@ -89,12 +102,19 @@ export default function ChatScreen({ route }) {
     )
   }
 
+  
+
+  
+
+  
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={90}
     >
+      <LinearGradient colors={['#f5f7fa', '#c3cfe2']} style={{ flex: 1 }}>
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -121,6 +141,14 @@ export default function ChatScreen({ route }) {
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
+      {messageText.length > 0 && (
+        <View style={styles.typingContainer}>
+          <Animated.View style={[styles.dot, dot1Style]} />
+          <Animated.View style={[styles.dot, dot2Style]} />
+          <Animated.View style={[styles.dot, dot3Style]} />
+        </View>
+      )}
+      </LinearGradient>
     </KeyboardAvoidingView>
   )
 }
@@ -128,7 +156,6 @@ export default function ChatScreen({ route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   messagesList: {
     padding: 15,
@@ -172,14 +199,15 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.7)',
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
     alignItems: 'center',
+    backdropFilter: 'blur(10px)'
   },
   input: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(255,255,255,0.6)',
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
@@ -188,10 +216,23 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     marginLeft: 10,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#764ba2',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
+  },
+  typingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 8,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#764ba2',
+    marginHorizontal: 3,
   },
   sendButtonDisabled: {
     opacity: 0.5,

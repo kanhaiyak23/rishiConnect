@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { BlurView } from 'expo-blur'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchChatRooms, setCurrentRoom } from '../redux/slices/chatSlice'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -155,7 +157,12 @@ export default function ChatsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chats</Text>
       </View>
@@ -167,14 +174,13 @@ export default function ChatsScreen() {
         onRefresh={() => user && dispatch(fetchChatRooms(user.id))}
         refreshing={loading}
       />
-    </View>
+    </LinearGradient>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     paddingTop: 60,
@@ -202,14 +208,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 15,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    marginBottom: 10,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    borderRadius: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 6,
   },
   avatar: {
     width: 60,
