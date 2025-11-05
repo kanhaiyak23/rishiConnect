@@ -105,6 +105,9 @@ export default function ProfileScreen({ navigation }) {
               Logout
             </Text>
           </TouchableOpacity>
+          <View>
+         
+          </View>
         </View>
       </ScrollView>
     </LinearGradient>

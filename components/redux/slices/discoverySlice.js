@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { supabase } from '../../lib/supabase'
+import { notifyLike, notifyMatch } from '../../lib/notifications'
 
 export const fetchPotentialMatches = createAsyncThunk(
   'discovery/fetchPotentialMatches',
@@ -10,28 +11,28 @@ export const fetchPotentialMatches = createAsyncThunk(
         .from('swipes')
         .select('target_user_id') // Get the IDs of users they swiped on
         .eq('user_id', userId)
-      
+
       if (swipeError) throw swipeError
-      
+
       // 2. Create a list of IDs to exclude.
       // Start with the user's own ID.
       const excludedIds = [userId]
-      
+
       // Add all swiped user IDs to the list
       if (swipedUsers) {
         swipedUsers.forEach(swipe => {
           excludedIds.push(swipe.target_user_id)
         })
       }
-      
+
       // 3. Fetch profiles, excluding the user and anyone they've swiped on
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         // Use the new, correct excludedIds list
-        .not('id', 'in', `(${excludedIds.join(',')})`) 
+        .not('id', 'in', `(${excludedIds.join(',')})`)
         .limit(20)
-      
+
       if (error) throw error
       return data
     } catch (error) {
@@ -53,9 +54,9 @@ export const swipeUser = createAsyncThunk(
           action: action, // 'like' or 'pass'
         })
         .select()
-      
+
       if (error) throw error
-      
+      console.log(action)
       // 2. Check for a match if the action was 'like'
       if (action === 'like') {
         const { data: matchCheck } = await supabase
@@ -64,49 +65,51 @@ export const swipeUser = createAsyncThunk(
           .eq('user_id', targetUserId)
           .eq('target_user_id', userId)
           .eq('action', 'like')
-          .single()
-        
+          .single();
+
         if (matchCheck) {
-           console.log('✅ Match detected between:', userId, targetUserId)
-          // It's a match!
-          // 3. Create the match record for BOTH users
-          await supabase
-            .from('matches')
-            .insert([
-              {
-                user_id: userId,
-                matched_user_id: targetUserId,
-              },
-              {
-                user_id: targetUserId,
-                matched_user_id: userId,
-              }
-            ])
-          
-          // 4. Create the chat room
-          await supabase
-            .from('chat_rooms')
-            .insert({
-              user1_id: userId,
-              user2_id: targetUserId,
-            })
-          
-          // 5. +++ FIX: Fetch the matched user's profile for the modal +++
+          // ✅ It's a match!
+          console.log('✅ Match detected between:', userId, targetUserId);
+
+          await supabase.from('matches').insert([
+            { user_id: userId, matched_user_id: targetUserId },
+            { user_id: targetUserId, matched_user_id: userId },
+          ]);
+
+          await supabase.from('chat_rooms').insert({
+            user1_id: userId,
+            user2_id: targetUserId,
+          });
+
+          try {
+            console.log("🎉 Calling notifyMatch...");
+            await notifyMatch({ userAId: userId, userBId: targetUserId });
+          } catch (e) {
+            console.warn('notifyMatch failed', e);
+          }
+
           const { data: matchedProfile, error: profileError } = await supabase
             .from('profiles')
-            .select('name, photo_url') // Just get what the modal needs
+            .select('name, photo_url')
             .eq('id', targetUserId)
-            .single()
+            .single();
 
-          if (profileError) throw profileError
+          if (profileError) throw profileError;
 
-          // Return the profile info so the modal can display "You matched with [Name]!"
-          return { isMatch: true, match: matchedProfile }
+          return { isMatch: true, match: matchedProfile };
+        } else {
+          // ✅ One-way like — notify the target user
+          try {
+            console.log("💌 Calling notifyLike (one-way like)...");
+            await notifyLike({ fromUserId: userId, toUserId: targetUserId });
+          } catch (e) {
+            console.warn('notifyLike failed', e);
+          }
+
+          return { isMatch: false };
         }
       }
-      
-      // No match, just a normal swipe
-      return { isMatch: false }
+
     } catch (error) {
       return rejectWithValue(error.message)
     }
@@ -159,7 +162,7 @@ const discoverySlice = createSlice({
       .addCase(swipeUser.fulfilled, (state, action) => {
         if (action.payload.isMatch) {
           // This payload now contains { name, photo_url }
-          state.recentMatch = action.payload.match 
+          state.recentMatch = action.payload.match
         }
         // Increment index to show the next card
         state.currentIndex += 1

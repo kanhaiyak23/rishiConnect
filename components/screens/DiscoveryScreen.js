@@ -194,12 +194,12 @@ export default function DiscoveryScreen({ navigation }) {
       {recentMatch && (
         <View style={styles.matchModal}>
           {/* Confetti animation - ensure assets/lottie/confetti.json exists */}
-          <LottieView
+          {/* <LottieView
             source={require('../../assets/lottie/confetti.json')}
             autoPlay
             loop={false}
             style={styles.confetti}
-          />
+          /> */}
           <LinearGradient colors={['#ffffff', '#f8f8ff']} style={styles.matchContent}>
             <Text style={styles.matchTitle}>🎉 It's a Match!</Text>
             <Text style={styles.matchText}>

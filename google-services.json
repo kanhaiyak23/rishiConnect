@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "839927644667",
+    "project_id": "notification-f1fd7",
+    "storage_bucket": "notification-f1fd7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:839927644667:android:f3ab6d853d599fc5c88b5e",
+        "android_client_info": {
+          "package_name": "com.rishihood.rishiconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAq6LYtfJfTMdg-fKSvf63mw1LzrzdIODI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

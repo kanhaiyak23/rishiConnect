@@ -8,7 +8,7 @@ import { store } from './redux/store'
 import { checkSession } from './redux/slices/authSlice'
 // import { updatePushToken } from './redux/slices/profileSlice'
 // import NotificationService from './lib/notificationService'
-
+import { usePushNotifications } from "./usePushNotification"
 import * as Linking from 'expo-linking';
 import { Alert } from 'react-native';
 
@@ -103,6 +103,10 @@ function AppNavigator() {
   const { profile } = useSelector((state) => state.profile)
   const [isLoading, setIsLoading] = useState(true)
   const [minimumLoadingTime, setMinimumLoadingTime] = useState(true)
+  
+  // Initialize push notifications when user is logged in
+  usePushNotifications()
+  
 
   useEffect(() => {
     const loadData = async () => {
@@ -186,6 +190,262 @@ export default function App() {
     </Provider>
 )
 }
+
+
+
+
+
+
+// _______
+// Basic notification setup
+// import * as Notifications from 'expo-notifications';
+// import { useEffect, useRef, useState } from 'react';
+// import { Text, View, Button, Platform, StyleSheet } from 'react-native';
+// import { useRouter } from 'expo-router';
+// import * as Device from 'expo-device';
+// import Constants from 'expo-constants';
+// import { Linking } from 'react-native';
+// // Set notification handler
+// Notifications.setNotificationHandler({
+//   handleNotification: async () => ({
+//     shouldShowAlert: true,
+//     shouldPlaySound: true,
+//     shouldSetBadge: false,
+//   }),
+// });
+
+// export default function App() {
+//   const [expoPushToken, setExpoPushToken] = useState('');
+//   const [notification, setNotification] = useState(undefined);
+//   const notificationListener = useRef();
+//   const responseListener = useRef();
+//   const router=useRouter()
+
+//   function redirect(notification) {
+//   const url = notification.request.content.data?.url;
+//   if (typeof url === 'string') {
+//     console.log('Redirecting to:', url);
+//     router.push(url);
+//   }
+// }
+
+//   useEffect(() => {
+//     // Register device for push notifications
+//     registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+
+//     // Listen for received notifications
+//      const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+//       setNotification(notification);
+//     });
+//     const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+//       console.log(response);
+//       //  redirect(response.notification);
+//       const url = response.notification.request.content.data.url;
+//       Linking.openURL(url);
+//     });
+
+//     // Listen for notification responses (user interaction)
+    
+
+//     // Cleanup listeners
+//     return () => {
+//      notificationListener.remove();
+//       responseListener.remove();
+//     };
+//   }, []);
+
+//   return (
+//     <View style={styles.container}>
+//       <Text style={styles.header}>Your FCM Token:</Text>
+//       <Text selectable style={styles.token}>{expoPushToken}</Text>
+
+//       {notification && (
+//         <View style={styles.notificationCard}>
+//           <Text style={styles.title}>{notification.request.content.title}</Text>
+//           <Text style={styles.body}>{notification.request.content.body}</Text>
+//           <Text style={styles.data}>
+//             {JSON.stringify(notification.request.content.data)}
+//           </Text>
+//         </View>
+//       )}
+
+//       {/* Uncomment if you want to test sending a notification */}
+      
+//        <Button 
+//          title="Test Notification" 
+//          onPress={async () => await sendPushNotification(expoPushToken)} 
+//        /> 
+      
+
+//       <Button title="Schedule Test Notification" onPress={schedulePushNotification} />
+//     </View>
+//   );
+// }
+
+// // Redirect to the URL contained in notification data
+
+
+// // Send a test push notification via Expo Push API
+// async function sendPushNotification(expoPushToken) {
+//   const message = {
+//     to: expoPushToken,
+//     sound: 'default',
+//     title: 'Test Notification',
+//     body: 'This is a test push notification!',
+//     data: { someData: 'goes here' },
+//   };
+
+//   await fetch('https://exp.host/--/api/v2/push/send', {
+//     method: 'POST',
+//     headers: {
+//       Accept: 'application/json',
+//       'Accept-Encoding': 'gzip, deflate',
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify(message),
+//   });
+// }
+
+// // Register device for push notifications
+// async function registerForPushNotificationsAsync() {
+//   let token;
+
+//   if (Device.isDevice) {
+//     const { status: existingStatus } = await Notifications.getPermissionsAsync();
+//     let finalStatus = existingStatus;
+
+//     if (existingStatus !== 'granted') {
+//       const { status } = await Notifications.requestPermissionsAsync();
+//       finalStatus = status;
+//     }
+
+//     console.log('Existing permission:', existingStatus);
+
+//     if (finalStatus !== 'granted') {
+//       alert('Permission not granted!');
+//       return;
+//     }
+
+//     const projectId =
+//       Constants?.expoConfig?.extra?.eas?.projectId ??
+//       Constants?.easConfig?.projectId;
+
+//     if (!projectId) {
+//       console.error('Project ID not found');
+//       return;
+//     }
+//     console.log(projectId)
+
+//     try {
+//       const pushTokenString = (
+//         await Notifications.getExpoPushTokenAsync({ projectId })
+//       ).data;
+//       console.log('Expo Push Token:', pushTokenString);
+//       token = pushTokenString;
+//     } catch (e) {
+//       console.error('Error getting push token:', e);
+//     }
+//   } else {
+//     alert('Must use physical device for Push Notifications');
+//   }
+
+//   if (Platform.OS === 'android') {
+//     await Notifications.setNotificationChannelAsync('default', {
+//       name: 'default',
+//       importance: Notifications.AndroidImportance.MAX,
+//       vibrationPattern: [0, 250, 250, 250],
+//       lightColor: '#FF231F7C',
+//     });
+//   }
+
+//   return token;
+// }
+
+// // Schedule a local notification
+// async function schedulePushNotification() {
+//   await Notifications.scheduleNotificationAsync({
+//     content: {
+//       title: 'Checkout Screen',
+//       body: "I'm so proud of myself!",
+//       sound: 'default',
+//       data: { data: 'sss', url: '/components/screens/ChatScreen' },
+//     },
+//     trigger: { seconds: 10 },
+//   });
+
+//   console.log('Notification scheduled for 10 seconds from now.');
+// }
+
+// // Styles
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     padding: 16,
+//   },
+//   header: {
+//     fontSize: 18,
+//     fontWeight: 'bold',
+//     marginBottom: 8,
+//   },
+//   token: {
+//     fontSize: 12,
+//     color: 'gray',
+//     marginBottom: 16,
+//   },
+//   notificationCard: {
+//     padding: 16,
+//     borderRadius: 8,
+//     backgroundColor: '#e6f0ff',
+//     marginBottom: 16,
+//     width: '90%',
+//   },
+//   title: {
+//     fontWeight: 'bold',
+//     fontSize: 16,
+//   },
+//   body: {
+//     marginVertical: 4,
+//   },
+//   data: {
+//     fontSize: 12,
+//     color: 'gray',
+//   },
+// });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// sign in with google
+// export default function App() {
+//   const { expoPushToken, notification } = usePushNotifications();
+//   const data = JSON.stringify(notification, undefined, 2);
+//   return (
+//     <View style={{flex:1,justifyContent:'center',alignItems:'center'}}>
+//       <Text>Token: {expoPushToken?.data ?? ""}</Text>
+//       <Text>Notification: {data}</Text>
+//     </View>
+//   );
+// }
 // WebBrowser.maybeCompleteAuthSession();
 
 // export default function App() {
