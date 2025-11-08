@@ -4,13 +4,14 @@
     "slug": "rishiconnect",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/iconf.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+     "scheme": "rishiconnect", 
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/iconf.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FF6B6B"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
@@ -18,8 +19,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FF6B6B"
+        "foregroundImage": "./assets/iconfi.png",
+        "backgroundColor": "#FFFFFF"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.rishihood.rishiconnect",
@@ -45,7 +46,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/icon.png",
+          "icon": "./assets/iconf.png",
           "color": "#FF6B6B",
           "defaultChannel": "default"
         }

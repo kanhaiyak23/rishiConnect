@@ -1,81 +1,69 @@
 import React, { useEffect } from 'react'
-import { View, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
   withSpring, 
-  withSequence,
   withTiming,
-  withRepeat,
   withDelay,
   Easing
 } from 'react-native-reanimated'
 import { LinearGradient } from 'expo-linear-gradient'
-import RishiConnectLogo from '../RishiConnectLogo'
 
 export default function SplashScreen({ navigation }) {
-  const scale = useSharedValue(0.5)
-  const rotate = useSharedValue(0)
-  const opacity = useSharedValue(0)
-  const glow = useSharedValue(0.3)
+  const heartScale = useSharedValue(0.5)
+  const heartOpacity = useSharedValue(0)
+  const titleOpacity = useSharedValue(0)
+  const taglineOpacity = useSharedValue(0)
 
   useEffect(() => {
-    // Logo entrance animation
-    scale.value = withDelay(200, withSpring(1, { damping: 8, stiffness: 80 }))
-    opacity.value = withDelay(200, withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic) }))
+    // Heart icon entrance animation
+    heartScale.value = withDelay(200, withSpring(1, { damping: 10, stiffness: 100 }))
+    heartOpacity.value = withDelay(200, withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) }))
     
-    // Floating glow effect
-    glow.value = withRepeat(
-      withSequence(
-        withTiming(0.8, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.3, { duration: 2000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      false
-    )
-
-    // Gentle rotation
-    rotate.value = withRepeat(
-      withSequence(
-        withTiming(10, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-10, { duration: 3000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      false
-    )
+    // Title fade in
+    titleOpacity.value = withDelay(400, withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic) }))
+    
+    // Tagline fade in
+    taglineOpacity.value = withDelay(600, withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) }))
   }, [])
 
-  const logoStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { rotate: `${rotate.value}deg` }
-    ],
-    opacity: opacity.value,
+  const heartStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+    opacity: heartOpacity.value,
   }))
 
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glow.value,
+  const titleStyle = useAnimatedStyle(() => ({
+    opacity: titleOpacity.value,
+  }))
+
+  const taglineStyle = useAnimatedStyle(() => ({
+    opacity: taglineOpacity.value,
   }))
 
   return (
     <LinearGradient
-      colors={['#667eea', '#764ba2', '#f093fb', '#f5576c']}
+      colors={['#FF6B9D', '#C44569', '#8B4A9C', '#6B3FA0']}
       start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+      end={{ x: 0, y: 1 }}
       style={styles.container}
     >
-      {/* Animated glow effect */}
-      <Animated.View style={[styles.glow, glowStyle]}>
-        <LinearGradient
-          colors={['rgba(255,255,255,0.3)', 'transparent']}
-          style={styles.glowGradient}
-        />
-      </Animated.View>
+      <View style={styles.content}>
+        {/* Heart Icon */}
+        <Animated.View style={[styles.heartContainer, heartStyle]}>
+          <Text style={styles.heartIcon}>❤️</Text>
+        </Animated.View>
 
-      {/* Main logo */}
-      <Animated.View style={[styles.logoContainer, logoStyle]}>
-        <RishiConnectLogo size="xlarge" showIcon={true} />
-      </Animated.View>
+        {/* App Name */}
+        <Animated.Text style={[styles.appName, titleStyle]}>
+          RishiConnect
+        </Animated.Text>
+
+        {/* Tagline */}
+        <Animated.Text style={[styles.tagline, taglineStyle]}>
+          Your Campus, Your Circle
+        </Animated.Text>
+      </View>
     </LinearGradient>
   )
 }
@@ -83,26 +71,41 @@ export default function SplashScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  glow: {
-    position: 'absolute',
-    width: 400,
-    height: 400,
-    borderRadius: 200,
-  },
-  glowGradient: {
+  content: {
     flex: 1,
-    borderRadius: 200,
-  },
-  logoContainer: {
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heartContainer: {
+    marginBottom: 20,
     shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 40,
-    elevation: 20,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  heartIcon: {
+    fontSize: 48,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  appName: {
+    fontSize: 42,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  tagline: {
+    fontSize: 16,
+    fontWeight: '300',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    opacity: 0.95,
   },
 })

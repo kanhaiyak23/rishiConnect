@@ -6,9 +6,13 @@ import { Provider, useSelector, useDispatch } from 'react-redux'
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { store } from './redux/store'
 import { checkSession } from './redux/slices/authSlice'
+import { usePushNotifications } from './usePushNotification'
+import { setUser } from './redux/slices/authSlice'
 // import { updatePushToken } from './redux/slices/profileSlice'
 // import NotificationService from './lib/notificationService'
-import { usePushNotifications } from "./usePushNotification"
+import EmailVerificationHandler from './screens/EmailVerificationHandler'
+
+
 import * as Linking from 'expo-linking';
 import { Alert } from 'react-native';
 
@@ -104,9 +108,34 @@ function AppNavigator() {
   const [isLoading, setIsLoading] = useState(true)
   const [minimumLoadingTime, setMinimumLoadingTime] = useState(true)
   
-  // Initialize push notifications when user is logged in
-  usePushNotifications()
   
+  // Initialize push notifications when user is logged in
+  // useEffect(() => {
+  //   if (user) {
+  //     usePushNotifications();
+  //   }
+  // }, [user]);
+//    useEffect(() => {
+//     // Log when the app opens via a deep link
+//     const subscription = Linking.addEventListener("url", ({ url }) => {
+//       console.log("📩 Deep link received:", url);
+//     });
+
+//     // Check if app was launched from a link
+//     Linking.getInitialURL().then((url) => {
+//       if (url) console.log("🚀 App launched via:", url);
+//     });
+
+//     return () => subscription.remove();
+//   }, []);
+//   function PushNotificationSetup() {
+//   usePushNotifications(); // Handles login/logout internally
+//   return null;
+// }
+useEffect(() => {
+  supabase.auth.signOut();  // 👈 clear cached session
+}, []); 
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -119,7 +148,7 @@ function AppNavigator() {
 
       // Ensure minimum 3 seconds display time
       const elapsedTime = Date.now() - startTime
-      const remainingTime = Math.max(0, 2000 - elapsedTime)
+      const remainingTime = Math.max(0, 5000 - elapsedTime)
       
       if (remainingTime > 0) {
         setTimeout(() => {
@@ -137,11 +166,13 @@ function AppNavigator() {
     return <SplashScreen />
   }
 
+
   
 
   
 
   return (
+    
     <Stack.Navigator>
       {!session ? (
         
@@ -178,14 +209,51 @@ function AppNavigator() {
 }
 
 export default function App() {
+  
+  function PushNotificationSetup() {
+  usePushNotifications(); // Handles login/logout internally
+  return null;
+}
+const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
+
+  useEffect(() => {
+    // Show animated splash for 3 seconds
+    const timer = setTimeout(() => {
+      setShowAnimatedSplash(false);
+    }, 3000); // duration of your splash animation
+
+    return () => clearTimeout(timer);
+  }, []);
+// useEffect(() => {
+//   const { data: subscription } = supabase.auth.onAuthStateChange(
+//     async (event, session) => {
+//       if (session?.user) {
+//         dispatch(setUser(session.user));
+//       } else {
+//         dispatch(clearUser());
+//       }
+//     }
+//   );
+
+//   return () => subscription?.subscription.unsubscribe();
+// }, []);
   return (
    <Provider store={store}>
       <SafeAreaProvider>
-        <NavigationContainer>
-          <SafeAreaView style={{ flex: 1 }}>
-            <AppNavigator />
-          </SafeAreaView>
-        </NavigationContainer>
+        {showAnimatedSplash ? (
+          // Show your animated splash before main app
+          <SplashScreen />
+        ) : (
+          <>
+            <EmailVerificationHandler />
+            <NavigationContainer>
+              <SafeAreaView style={{ flex: 1 }}>
+                <PushNotificationSetup />
+                <AppNavigator />
+              </SafeAreaView>
+            </NavigationContainer>
+          </>
+        )}
       </SafeAreaProvider>
     </Provider>
 )

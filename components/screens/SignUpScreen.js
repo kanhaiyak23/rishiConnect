@@ -30,11 +30,6 @@ export default function SignUpScreen({ navigation }) {
     return
   }
 
-  // if (!email.endsWith('rishihood.edu.in')) {
-  //   Alert.alert('Error', 'Please use a valid Rishihood University email address')
-  //   return
-  // }
-
   if (password !== confirmPassword) {
     Alert.alert('Error', 'Passwords do not match')
     return
@@ -46,24 +41,86 @@ export default function SignUpScreen({ navigation }) {
   }
 
   try {
-    const { data, error } = await dispatch(signUp({ email, password, name })).unwrap()
+    const result = await dispatch(signUp({ email, password, name })).unwrap()
+    
 
-    if (error) {
-      Alert.alert('Error', error.message)
-      return
-    }
-
-    // Check if email confirmation is required
-    if (!data.user?.email_confirmed_at) {
+    // result comes from the return in your createAsyncThunk
+    if (result?.user) {
+      if (!result.user.email_confirmed_at) {
+        Alert.alert(
+          'Verify your email',
+          `A confirmation email has been sent to ${email}. Please verify your email before logging in.`,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                // Navigate to login screen after acknowledging
+                navigation.navigate('Login')
+              },
+            },
+          ]
+        )
+      } else {
+        Alert.alert('Success', 'Account created successfully!', [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login'),
+          },
+        ])
+      }
+    } else {
+      // No user object means verification is pending
       Alert.alert(
         'Verify your email',
-        `A confirmation email has been sent to ${email}. Please verify to complete registration.`
+        `A confirmation email has been sent to ${email}. Please verify to continue.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login'),
+          },
+        ]
       )
-    } else {
-      Alert.alert('Success', 'Account created successfully!')
     }
   } catch (error) {
-    Alert.alert('Error', error)
+    // Handle rejected errors cleanly
+    let message = typeof error === 'string' ? error : error?.message || 'An error occurred during signup.';
+    
+    // Handle specific error cases
+    if (message === 'EMAIL_EXISTS') {
+      Alert.alert(
+        'Email Already Exists',
+        'This email is already registered. Please sign in instead.',
+        [
+          {
+            text: 'Go to Login',
+            onPress: () => navigation.navigate('Login'),
+          },
+          {
+            text: 'OK',
+            style: 'cancel',
+          },
+        ]
+      );
+      return;
+    } else if (message === 'GOOGLE_OAUTH_EXISTS') {
+      Alert.alert(
+        'Email Already Registered',
+        'This email is already registered with Google. Please use Google Sign-In instead.',
+        [
+          {
+            text: 'Use Google Sign-In',
+            onPress: () => handleGoogleSignIn(),
+          },
+          {
+            text: 'OK',
+            style: 'cancel',
+          },
+        ]
+      );
+      return;
+    }
+    
+    Alert.alert('Error', message);
   }
 }
 

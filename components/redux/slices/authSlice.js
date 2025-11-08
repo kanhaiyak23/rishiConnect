@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { supabase } from '../../lib/supabase'
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
-
+WebBrowser.maybeCompleteAuthSession();
 // Import the profile actions
 import { fetchProfile, clearProfile } from './profileSlice'
 
@@ -17,49 +17,108 @@ export const signUp = createAsyncThunk(
         password,
         options: {
           data: { name },
-          emailRedirectTo: 'exp://10.7.2.228:8081',
+         emailRedirectTo: 'rishiconnect://auth/callback', // or skip in dev
         },
       })
-      if (error) throw error
-      
-      // When sign up is successful, also set the user in state
-      // (Supabase might return a user/session here depending on settings)
-      if (data.user) {
-        dispatch(setUser(data.user))
+      if (data.user?.identities?.length === 0) {
+        return rejectWithValue('User already registered');
       }
-      return data
+      if (error) {
+        const errorMessage = error.message.toLowerCase();
+
+        // Detect Google OAuth registration
+        if (errorMessage.includes('already registered') || errorMessage.includes('user already registered')) {
+          return rejectWithValue('GOOGLE_OAUTH_EXISTS');
+        }
+
+        
+      
+        
+        throw error;
+      }
+
+      // No session yet because email verification is required
+      if (data.user) {
+        // Just store minimal info or show message
+        dispatch(setUser({ email: data.user.email, id: data.user.id }))
+      }
+
+      // Tell UI that verification email was sent
+      return { success: true, message: 'Check your email for verification link' }
+
     } catch (error) {
+      // Handle specific refresh token issue gracefully
+      
+      if (error.message.includes('Refresh Token Not Found')) {
+        return rejectWithValue('Verification email sent. Please verify your email before signing in.')
+      }
       return rejectWithValue(error.message)
     }
   }
 )
 
+
+// export const signInWithGoogle = createAsyncThunk(
+//   'auth/signInWithGoogle',
+//   async (_, { rejectWithValue }) => {
+//     try {
+//       const { data, error } = await supabase.auth.signInWithOAuth({
+//         provider: 'google',
+//         options: {
+//           redirectTo: 
+//           // 'https://vwnwmrikprcqtzjhyblc.supabase.co/auth/v1/callback'
+//           'rishiconnect://auth/callback'
+//         },
+//       });
+
+//       if (error) throw error;
+      
+//       // Start the auth flow. Don't await getSession().
+//       // The onAuthStateChanged listener in App.js will handle the result.
+//       if (data?.url) {
+//         const result = await AuthSession.startAsync({ authUrl: data.url });
+
+//         if (result.type === 'success') {
+//           console.log('Google sign-in success via redirect!');
+//         } else {
+//           console.log('Google sign-in canceled or failed', result);
+//         }
+//       }
+
+//       return data;
+//     } catch (error) {
+//       console.error('Google sign-in error:', error);
+//       return rejectWithValue(error.message);
+//     }
+//   }
+// );
 export const signInWithGoogle = createAsyncThunk(
   'auth/signInWithGoogle',
   async (_, { rejectWithValue }) => {
     try {
+      const redirectTo = 'rishiconnect://auth/callback'; // deep link configured in app.json
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://vwnwmrikprcqtzjhyblc.supabase.co/auth/v1/callback'
+          redirectTo,
         },
       });
 
       if (error) throw error;
-      
-      // Start the auth flow. Don't await getSession().
-      // The onAuthStateChanged listener in App.js will handle the result.
+
+      // Open Google login screen
       if (data?.url) {
-        await AuthSession.startAsync({ authUrl: data.url });
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+        console.log('OAuth result:', result);
       }
 
-      return data;
-    } catch (error) {
-      return rejectWithValue(error.message);
+      return { success: true };
+    } catch (err) {
+      console.error('Google OAuth error:', err.message);
+      return rejectWithValue(err.message);
     }
   }
 );
-
 
 export const signIn = createAsyncThunk(
   'auth/signIn',
@@ -69,7 +128,28 @@ export const signIn = createAsyncThunk(
         email,
         password,
       })
-      if (error) throw error
+      
+      if (error) {
+        console.log(error)
+        // Check if the error suggests the email might be registered with Google
+        const errorMessage = error.message?.toLowerCase() || '';
+        const errorCode = error.status || error.code || '';
+        
+        // Check for specific error codes or messages that indicate Google OAuth
+        if (
+          errorMessage.includes('google') ||
+          errorMessage.includes('oauth') ||
+          errorMessage.includes('provider') ||
+          errorCode === 'signup_disabled' ||
+          errorCode === 'email_provider_disabled'
+        ) {
+          return rejectWithValue('GOOGLE_OAUTH_EXISTS');
+        }
+        
+        // For invalid credentials, we can't be sure if it's wrong password or Google OAuth
+        // We'll let the UI handle this with a generic error message
+        throw error;
+      }
       
       // +++ SUCCESS: Fetch the user's profile +++
       if (data.user) {
@@ -133,6 +213,10 @@ const authSlice = createSlice({
     setUser: (state, action) => {
       state.user = action.payload
     },
+    setSession: (state, action) => {
+      state.session = action.payload
+      state.user = action.payload ? action.payload.user : null
+    },
     clearError: (state) => {
       state.error = null
     },
@@ -194,6 +278,6 @@ const authSlice = createSlice({
   },
 })
 
-export const { setUser, clearError } = authSlice.actions
+export const { setUser, setSession, clearError } = authSlice.actions
 export default authSlice.reducer
 

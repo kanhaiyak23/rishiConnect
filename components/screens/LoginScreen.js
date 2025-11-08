@@ -52,7 +52,28 @@ export default function LoginScreen({ navigation }) {
     console.log('Logged in user:', user); // Full user object for debugging
 
   } catch (error) {
-    Alert.alert('Error', error.message ?? error);
+    let message = typeof error === 'string' ? error : error?.message || 'An error occurred during login.';
+    
+    // Handle specific error cases
+    if (message === 'GOOGLE_OAUTH_EXISTS') {
+      Alert.alert(
+        'Email Registered with Google',
+        'This email is already registered with Google. Please use Google Sign-In instead.',
+        [
+          {
+            text: 'Use Google Sign-In',
+            onPress: () => handleGoogleSignIn(),
+          },
+          {
+            text: 'OK',
+            style: 'cancel',
+          },
+        ]
+      );
+      return;
+    }
+    
+    Alert.alert('Error', message);
   }
 };
 

@@ -19,9 +19,11 @@ export const usePushNotifications = () => {
   const [expoPushToken, setExpoPushToken] = useState();
   const [notification, setNotification] = useState();
   const authUser = useSelector((state) => state.auth.user)
+  const profile = useSelector((state) => state.profile.profile)
 
   const notificationListener = useRef();
   const responseListener = useRef();
+    
 
   async function registerForPushNotificationsAsync() {
     let token;
@@ -60,7 +62,6 @@ export const usePushNotifications = () => {
 
     return token;
   }
-
   // Register for push notifications and save token when user changes
   useEffect(() => {
     let isMounted = true;
@@ -70,29 +71,34 @@ export const usePushNotifications = () => {
       registerForPushNotificationsAsync().then(async (token) => {
         if (isMounted && token) {
           setExpoPushToken(token);
-          console.log(token)
+          console.log('📱 Expo push token registered:', token);
 
           // Persist Expo push token to the user's profile if logged in
           if (authUser?.id) {
             try {
-              await savePushTokenForUser(authUser.id, token)
+              await savePushTokenForUser(authUser.id, token);
             } catch (e) {
-              console.warn('Failed to save push token:', e)
+              console.warn('Failed to save push token on registration:', e);
             }
           }
         }
       });
-    } else if (authUser?.id && expoPushToken) {
-      // If we already have a token but user changed, update it
-      savePushTokenForUser(authUser.id, expoPushToken).catch(e => {
-        console.warn('Failed to update push token:', e)
-      })
     }
 
     return () => {
       isMounted = false;
     };
-  }, [authUser?.id, expoPushToken]); // Re-run when user changes (login/logout) or token is set
+  }, []); // Only run once to register for push notifications
+
+  // Save/update push token when user logs in, token changes, or profile is created/updated
+  useEffect(() => {
+    if (authUser?.id && expoPushToken) {
+      console.log('💾 Saving push token for user:', authUser.id);
+      savePushTokenForUser(authUser.id, expoPushToken).catch(e => {
+        console.error('Failed to save/update push token:', e);
+      });
+    }
+  }, [authUser?.id, expoPushToken, profile?.id]); // Re-run when user changes, token is set, or profile is created/updated
 
   // Set up notification listeners (only once, persist for app lifetime)
   useEffect(() => {

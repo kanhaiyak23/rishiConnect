@@ -1,15 +1,47 @@
-import { use } from 'react';
 import { supabase } from './supabase'
 
 export async function savePushTokenForUser(userId, expoPushToken) {
-  // Store Expo push token on the profile for server-side delivery
-  await supabase
-    .from('profiles')
-    .update({
-      expo_push_token: expoPushToken ?? null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', userId)
+  if (!userId || !expoPushToken) {
+    console.warn('savePushTokenForUser: Missing userId or expoPushToken', { userId, expoPushToken });
+    return;
+  }
+
+  try {
+    // First, try to update the existing profile
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        expo_push_token: expoPushToken,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+      .select();
+
+    if (error) {
+      // If profile doesn't exist (PGRST116 = no rows found), log and return
+      // The token will be saved when the profile is created during profile setup
+      if (error.code === 'PGRST116') {
+        console.log('⚠️ Profile does not exist yet for user:', userId, '- Push token will be saved when profile is created');
+        return null;
+      }
+      // For other errors, throw
+      console.error('Error saving push token:', error);
+      throw error;
+    }
+
+    // If update succeeded but no rows were updated, profile might not exist
+    if (!data || data.length === 0) {
+      console.log('⚠️ Profile does not exist yet for user:', userId, '- Push token will be saved when profile is created');
+      return null;
+    }
+
+    console.log('✅ Push token saved successfully for user:', userId);
+    return data;
+  } catch (error) {
+    console.error('Failed to save push token for user:', userId, error);
+    // Don't throw - we'll retry when profile is created
+    return null;
+  }
 }
 
 export async function notifyLike({ fromUserId, toUserId }) {
