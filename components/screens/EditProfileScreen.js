@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker'
 import { decode } from 'base64-arraybuffer'
 import { updateProfile, fetchProfile } from '../redux/slices/profileSlice'
 import { supabase } from '../lib/supabase'
+import { Ionicons } from '@expo/vector-icons'
 
 export default function EditProfileScreen({ navigation }) {
   const dispatch = useDispatch()
@@ -108,56 +109,95 @@ export default function EditProfileScreen({ navigation }) {
     }
   }
 
-  const currentPhotoUri = photo?.uri || profile?.photo_url || 'https://via.placeholder.com/150'
+  const currentPhotoUri = photo?.uri || profile?.photo_url || 'https://placehold.co/150/2A2A2A/FF6B6B?text=No+Photo'
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Edit Profile</Text>
-        <Text style={styles.subtitle}>Update your details</Text>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <View style={styles.headerRight} />
+      </View>
 
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
           <Image source={{ uri: currentPhotoUri }} style={styles.photo} />
+          <View style={styles.photoEditOverlay}>
+            <Ionicons name="camera" size={24} color="#FFFFFF" />
+          </View>
         </TouchableOpacity>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          value={name}
-          onChangeText={setName}
-        />
+        {/* Two-column row: Nickname */}
+        <View style={styles.row}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nickname</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nickname"
+              placeholderTextColor="#666666"
+              value={name}
+              onChangeText={setName}
+            />
+          </View>
+        </View>
 
-        <TextInput
-          style={styles.textArea}
-          placeholder="Bio"
-          value={bio}
-          onChangeText={setBio}
-          multiline
-          numberOfLines={4}
-          maxLength={200}
-        />
+        {/* Two-column row: Year and Major */}
+        <View style={styles.row}>
+          <View style={[styles.inputGroup, styles.halfWidth]}>
+            <Text style={styles.label}>Year</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Year"
+              placeholderTextColor="#666666"
+              value={year}
+              onChangeText={setYear}
+              keyboardType="numeric"
+            />
+          </View>
+          <View style={[styles.inputGroup, styles.halfWidth]}>
+            <Text style={styles.label}>Major</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Major"
+              placeholderTextColor="#666666"
+              value={major}
+              onChangeText={setMajor}
+            />
+          </View>
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Academic Year (e.g., 2024)"
-          value={year}
-          onChangeText={setYear}
-          keyboardType="numeric"
-        />
+        {/* Full-width: Interests */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Interests</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Interests (comma separated)"
+            placeholderTextColor="#666666"
+            value={interests}
+            onChangeText={setInterests}
+          />
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Major/Department"
-          value={major}
-          onChangeText={setMajor}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Interests (comma separated, e.g., coding, cricket)"
-          value={interests}
-          onChangeText={setInterests}
-        />
+        {/* Full-width: About Me */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>About Me</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Tell us about yourself..."
+            placeholderTextColor="#666666"
+            value={bio}
+            onChangeText={setBio}
+            multiline
+            numberOfLines={6}
+            maxLength={500}
+            textAlignVertical="top"
+          />
+        </View>
 
         <TouchableOpacity
           style={[styles.saveButton, (saving || loading) && styles.buttonDisabled]}
@@ -181,103 +221,133 @@ export default function EditProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A1A1A',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 40,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    backgroundColor: '#1A1A1A',
+    borderBottomWidth: 1,
+    borderBottomColor: '#333333',
+  },
+  backButton: {
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    flex: 1,
+    marginLeft: 16,
+  },
+  headerRight: {
+    width: 32,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 30,
-    paddingTop: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#FF6B6B',
-    marginBottom: 6,
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 20,
-    fontWeight: '300',
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
   photoButton: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: '#F8F8F8',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#2A2A2A',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
-    marginBottom: 30,
+    marginBottom: 32,
     borderWidth: 2,
-    borderColor: '#E8E8E8',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderColor: '#333333',
+    position: 'relative',
+    overflow: 'hidden',
   },
   photo: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  photoEditOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 40,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 16,
+  },
+  inputGroup: {
+    flex: 1,
+    marginBottom: 20,
+  },
+  halfWidth: {
+    flex: 0.48,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 8,
   },
   input: {
-    backgroundColor: '#F8F8F8',
-    padding: 18,
-    borderRadius: 15,
-    marginBottom: 15,
+    backgroundColor: '#2A2A2A',
+    padding: 16,
+    borderRadius: 12,
     fontSize: 16,
+    color: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: '#333333',
   },
   textArea: {
-    backgroundColor: '#F8F8F8',
-    padding: 18,
-    borderRadius: 15,
-    marginBottom: 15,
+    backgroundColor: '#2A2A2A',
+    padding: 16,
+    borderRadius: 12,
     fontSize: 16,
-    height: 100,
-    textAlignVertical: 'top',
+    color: '#FFFFFF',
+    height: 120,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: '#333333',
   },
   saveButton: {
     backgroundColor: '#FF6B6B',
     padding: 18,
-    borderRadius: 30,
+    borderRadius: 12,
     alignItems: 'center',
     marginTop: 10,
-    shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    marginBottom: 16,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   saveButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  cancelButton: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 30,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FF6B6B',
-    marginTop: 15,
-  },
-  cancelButtonText: {
-    color: '#FF6B6B',
     fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0.5,
+  },
+  cancelButton: {
+    backgroundColor: '#2A2A2A',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333333',
+    marginBottom: 32,
+  },
+  cancelButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 })
 

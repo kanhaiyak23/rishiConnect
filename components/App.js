@@ -38,6 +38,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { supabase } from './lib/supabase';
 import RishiConnectLogo from './RishiConnectLogo';
+import { Ionicons } from '@expo/vector-icons';
 WebBrowser.maybeCompleteAuthSession();
 
 function AuthStack() {
@@ -57,12 +58,13 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: '#FF6B6B',
-        tabBarInactiveTintColor: '#999',
+        tabBarInactiveTintColor: '#999999',
         tabBarStyle: {
+          backgroundColor: '#1A1A1A',
+          borderTopWidth: 1,
+          borderTopColor: '#333333',
           paddingBottom: 8,
           height: 65,
-          borderTopWidth: 1,
-          borderTopColor: '#F0F0F0',
         },
         tabBarLabelStyle: {
           fontWeight: '600',
@@ -74,8 +76,13 @@ function MainTabs() {
         name="Discover" 
         component={DiscoveryScreen}
         options={{
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 26, color: color }}>✨</Text>
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons 
+              name={focused ? "home" : "home-outline"} 
+              size={24} 
+              color={color} 
+            />
           ),
         }}
       />
@@ -83,8 +90,13 @@ function MainTabs() {
         name="Chats" 
         component={ChatsScreen}
         options={{
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 26, color: color }}>💬</Text>
+          tabBarLabel: 'Chats',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons 
+              name={focused ? "chatbubbles" : "chatbubbles-outline"} 
+              size={24} 
+              color={color} 
+            />
           ),
         }}
       />
@@ -92,8 +104,13 @@ function MainTabs() {
         name="Profile" 
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 26, color: color }}>👤</Text>
+          tabBarLabel: 'Profile',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons 
+              name={focused ? "person" : "person-outline"} 
+              size={24} 
+              color={color} 
+            />
           ),
         }}
       />
@@ -132,9 +149,9 @@ function AppNavigator() {
 //   usePushNotifications(); // Handles login/logout internally
 //   return null;
 // }
-useEffect(() => {
-  supabase.auth.signOut();  // 👈 clear cached session
-}, []); 
+// useEffect(() => {
+//   supabase.auth.signOut();  // 👈 clear cached session
+// }, []); 
 
 
   useEffect(() => {
@@ -148,7 +165,7 @@ useEffect(() => {
 
       // Ensure minimum 3 seconds display time
       const elapsedTime = Date.now() - startTime
-      const remainingTime = Math.max(0, 5000 - elapsedTime)
+      const remainingTime = Math.max(0, 2000 - elapsedTime)
       
       if (remainingTime > 0) {
         setTimeout(() => {
@@ -162,9 +179,9 @@ useEffect(() => {
     loadData()
   }, [dispatch])
 
-  if (isLoading || minimumLoadingTime) {
-    return <SplashScreen />
-  }
+  // if (isLoading || minimumLoadingTime) {
+  //   return <SplashScreen />
+  // }
 
 
   
@@ -176,7 +193,7 @@ useEffect(() => {
     <Stack.Navigator>
       {!session ? (
         
-        <Stack.Screen name="Auth" component={AuthStack} />
+        <Stack.Screen name="Auth" component={AuthStack} options={{ headerShown: false }} />
       ) : !profile?.is_complete ? (
         <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       ) : (
@@ -185,20 +202,20 @@ useEffect(() => {
           <Stack.Screen 
             name="EditProfile" 
             component={EditProfileScreen}
-            options={{ headerShown: true, title: 'Edit Profile' }}
+            options={{ headerShown: false, title: 'Edit Profile' }}
           />
           <Stack.Screen 
             name="Chat" 
             component={ChatScreen}
             options={({ route }) => ({ 
-              headerShown: true,
+              headerShown: false,
               title: route.params?.room?.user2?.name || 'Chat'
             })}
           /> 
            <Stack.Screen 
             name="Settings" 
             component={SettingsScreen}
-            options={{ headerShown: true, title: 'Settings' }}
+            options={{ headerShown: false, title: 'Settings' }}
           /> 
           </>
         

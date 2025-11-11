@@ -6,13 +6,10 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Alert,
 } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
-import { BlurView } from 'expo-blur'
 import { useDispatch, useSelector } from 'react-redux'
-import { signOut } from '../redux/slices/authSlice'
 import { fetchProfile } from '../redux/slices/profileSlice'
+import { Ionicons } from '@expo/vector-icons'
 
 export default function ProfileScreen({ navigation }) {
   const dispatch = useDispatch()
@@ -25,204 +22,253 @@ export default function ProfileScreen({ navigation }) {
     }
   }, [user, dispatch])
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await dispatch(signOut())
-          },
-        },
-      ]
-    )
-  }
-
   return (
-    <LinearGradient
-      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-      </View>
-
-      <ScrollView style={styles.content}>
-        <BlurView intensity={60} style={styles.profileCard}>
-          <Image
-            source={{ uri: profile?.photo_url || 'https://via.placeholder.com/120' }}
-            style={styles.avatar}
-          />
-          <Text style={styles.name}>{profile?.name || user?.email}</Text>
-          <Text style={styles.yearMajor}>
-            {profile?.year} • {profile?.major}
-          </Text>
-
-          {profile?.bio && (
-            <Text style={styles.bio}>{profile.bio}</Text>
-          )}
-
-          {profile?.interests && profile.interests.length > 0 && (
-            <View style={styles.interestsSection}>
-              <Text style={styles.sectionTitle}>Interests</Text>
-              <View style={styles.interestsContainer}>
-                {profile.interests.map((interest, index) => (
-                  <View key={index} style={styles.interestTag}>
-                    <Text style={styles.interestText}>#{interest}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-        </BlurView>
-
-        <View style={styles.actionsSection}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('EditProfile')}
-          >
-            <Text style={styles.actionButtonText}>✏️ Edit Profile</Text>
+        <View style={styles.headerLeft}>
+          <View style={styles.logoIcon}>
+            <Ionicons name="chatbubble-ellipses" size={24} color="#FF6B6B" />
+            <Ionicons name="heart" size={12} color="#E74C3C" style={styles.heartIcon} />
+          </View>
+          <Text style={styles.headerTitle}>Profile</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.upgradeButton}>
+            <Ionicons name="star" size={20} color="#FFFFFF" />
+            <Text style={styles.upgradeText}>UPGRADE</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
+          <TouchableOpacity 
+            style={styles.settingsButton}
             onPress={() => navigation.navigate('Settings')}
           >
-            <Text style={styles.actionButtonText}>⚙️ Settings</Text>
+            <Ionicons name="settings-outline" size={24} color="#FFFFFF" />
           </TouchableOpacity>
+        </View>
+      </View>
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.logoutButton]}
-            onPress={handleLogout}
-          >
-            <Text style={[styles.actionButtonText, styles.logoutButtonText]}>
-              Logout
-            </Text>
-          </TouchableOpacity>
-          <View>
-         
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Profile Picture Section */}
+        <View style={styles.profilePictureSection}>
+          {/* Image indicators */}
+          <View style={styles.imageIndicators}>
+            {[1, 2, 3, 4, 5].map((index) => (
+              <View
+                key={index}
+                style={[styles.indicator, index === 1 && styles.indicatorActive]}
+              />
+            ))}
           </View>
+          <Image
+            source={{ uri: profile?.photo_url || 'https://placehold.co/400/2A2A2A/FF6B6B?text=No+Photo' }}
+            style={styles.profileImage}
+          />
+        </View>
+
+        {/* Profile Details Section */}
+        <View style={styles.profileDetailsSection}>
+          <View style={styles.profileDetailsLeft}>
+            <Text style={styles.profileName}>
+              {profile?.name || user?.email?.split('@')[0] || 'User'}
+            </Text>
+            {profile?.year && (
+              <View style={styles.detailRow}>
+                <Ionicons name="calendar-outline" size={18} color="#FFFFFF" style={styles.detailIcon} />
+                <Text style={styles.detailText}>{profile.year}</Text>
+              </View>
+            )}
+            {profile?.major && (
+              <View style={styles.detailRow}>
+                <Ionicons name="school-outline" size={18} color="#FFFFFF" style={styles.detailIcon} />
+                <Text style={styles.detailText}>{profile.major}</Text>
+              </View>
+            )}
+            {profile?.bio && (
+              <View style={styles.detailRow}>
+                <Ionicons name="document-text-outline" size={18} color="#FFFFFF" style={styles.detailIcon} />
+                <Text style={styles.detailText} numberOfLines={2}>{profile.bio}</Text>
+              </View>
+            )}
+            {profile?.interests && profile.interests.length > 0 && (
+              <View style={styles.interestsSection}>
+                <View style={styles.detailRow}>
+                  <Ionicons name="heart-outline" size={18} color="#FFFFFF" style={styles.detailIcon} />
+                  <Text style={styles.detailText}>Interests</Text>
+                </View>
+                <View style={styles.interestsContainer}>
+                  {profile.interests.slice(0, 5).map((interest, index) => (
+                    <View key={index} style={styles.interestTag}>
+                      <Text style={styles.interestText}>{interest}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => navigation.navigate('EditProfile')}
+          >
+            <Ionicons name="pencil" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
       </ScrollView>
-    </LinearGradient>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A1A1A',
   },
   header: {
-    paddingTop: 60,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 40,
     paddingHorizontal: 20,
-    paddingBottom: 15,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingBottom: 10,
+    backgroundColor: '#1A1A1A',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoIcon: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  heartIcon: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
-    color: '#FF6B6B',
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  upgradeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  settingsButton: {
+    padding: 4,
   },
   content: {
     flex: 1,
   },
-  profileCard: {
-    alignItems: 'center',
-    padding: 30,
+  profilePictureSection: {
+    position: 'relative',
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 24,
     borderRadius: 20,
-    margin: 20,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.4)'
+    overflow: 'hidden',
+    backgroundColor: '#2A2A2A',
   },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 20,
+  imageIndicators: {
+    position: 'absolute',
+    top: 12,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    zIndex: 10,
   },
-  name: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
+  indicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
-  yearMajor: {
+  indicatorActive: {
+    backgroundColor: '#FF6B6B',
+    width: 20,
+  },
+  profileImage: {
+    width: '100%',
+    height: 400,
+    resizeMode: 'cover',
+  },
+  profileDetailsSection: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 40,
+  },
+  profileDetailsLeft: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 16,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  detailIcon: {
+    marginRight: 12,
+  },
+  detailText: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 15,
-  },
-  bio: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 20,
+    color: '#FFFFFF',
+    flex: 1,
+    opacity: 0.9,
   },
   interestsSection: {
-    width: '100%',
-    marginTop: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    marginTop: 8,
   },
   interestsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginTop: 8,
+    gap: 8,
   },
   interestTag: {
-    backgroundColor: '#FFF3F3',
+    backgroundColor: 'rgba(255, 107, 107, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 15,
-    marginRight: 8,
-    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FF6B6B',
   },
   interestText: {
-    color: '#FF6B6B',
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
-  actionsSection: {
-    padding: 20,
-  },
-  actionButton: {
-    backgroundColor: '#F5F5F5',
-    padding: 16,
-    borderRadius: 10,
-    marginBottom: 15,
+  editButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FF6B6B',
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  actionButtonText: {
-    fontSize: 18,
-    color: '#333',
-    fontWeight: '600',
-  },
-  logoutButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#FF6B6B',
-    marginTop: 20,
-  },
-  logoutButtonText: {
-    color: '#FF6B6B',
+    marginLeft: 16,
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
 })

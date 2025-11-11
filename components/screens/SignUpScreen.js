@@ -6,12 +6,12 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from 'react-native'
 import Animated, { useSharedValue, withDelay, withSpring, withTiming, useAnimatedStyle } from 'react-native-reanimated'
-import { LinearGradient } from 'expo-linear-gradient'
-import { BlurView } from 'expo-blur'
 import { useDispatch, useSelector } from 'react-redux'
 import { signUp, signInWithGoogle } from '../redux/slices/authSlice'
+import { Ionicons } from '@expo/vector-icons'
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
@@ -19,110 +19,72 @@ export default function SignUpScreen({ navigation }) {
   const dispatch = useDispatch()
   const { loading } = useSelector((state) => state.auth)
   
-  const [name, setName] = useState('kanhaiya')
-  const [email, setEmail] = useState('kanhaiya.k23csai@nst.rishihood.edu.in')
-  const [password, setPassword] = useState('kanhaiya')
-  const [confirmPassword, setConfirmPassword] = useState('kanhaiya')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false)
 
   const handleSignUp = async () => {
-  if (!name || !email || !password) {
-    Alert.alert('Error', 'Please fill in all fields')
-    return
-  }
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields')
+      return
+    }
 
-  if (password !== confirmPassword) {
-    Alert.alert('Error', 'Passwords do not match')
-    return
-  }
+    if (!agreeToPrivacy) {
+      Alert.alert('Error', 'Please agree to the Privacy Policy')
+      return
+    }
 
-  if (password.length < 6) {
-    Alert.alert('Error', 'Password must be at least 6 characters')
-    return
-  }
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters')
+      return
+    }
 
-  try {
-    const result = await dispatch(signUp({ email, password, name })).unwrap()
-    
-
-    // result comes from the return in your createAsyncThunk
-    if (result?.user) {
-      if (!result.user.email_confirmed_at) {
+    try {
+      const result = await dispatch(signUp({ email, password, name: email.split('@')[0] })).unwrap()
+      
+      // Navigate to email verification screen
+      navigation.navigate('EmailVerification', { email })
+    } catch (error) {
+      let message = typeof error === 'string' ? error : error?.message || 'An error occurred during signup.';
+      
+      if (message === 'EMAIL_EXISTS' || message.includes('already registered')) {
         Alert.alert(
-          'Verify your email',
-          `A confirmation email has been sent to ${email}. Please verify your email before logging in.`,
+          'Email Already Exists',
+          'This email is already registered. Please sign in instead.',
           [
             {
+              text: 'Go to Login',
+              onPress: () => navigation.navigate('Login'),
+            },
+            {
               text: 'OK',
-              onPress: () => {
-                // Navigate to login screen after acknowledging
-                navigation.navigate('Login')
-              },
+              style: 'cancel',
             },
           ]
-        )
-      } else {
-        Alert.alert('Success', 'Account created successfully!', [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login'),
-          },
-        ])
+        );
+        return;
+      } else if (message === 'GOOGLE_OAUTH_EXISTS') {
+        Alert.alert(
+          'Email Already Registered',
+          'This email is already registered with Google. Please use Google Sign-In instead.',
+          [
+            {
+              text: 'Use Google Sign-In',
+              onPress: () => handleGoogleSignIn(),
+            },
+            {
+              text: 'OK',
+              style: 'cancel',
+            },
+          ]
+        );
+        return;
       }
-    } else {
-      // No user object means verification is pending
-      Alert.alert(
-        'Verify your email',
-        `A confirmation email has been sent to ${email}. Please verify to continue.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login'),
-          },
-        ]
-      )
+      
+      Alert.alert('Error', message);
     }
-  } catch (error) {
-    // Handle rejected errors cleanly
-    let message = typeof error === 'string' ? error : error?.message || 'An error occurred during signup.';
-    
-    // Handle specific error cases
-    if (message === 'EMAIL_EXISTS') {
-      Alert.alert(
-        'Email Already Exists',
-        'This email is already registered. Please sign in instead.',
-        [
-          {
-            text: 'Go to Login',
-            onPress: () => navigation.navigate('Login'),
-          },
-          {
-            text: 'OK',
-            style: 'cancel',
-          },
-        ]
-      );
-      return;
-    } else if (message === 'GOOGLE_OAUTH_EXISTS') {
-      Alert.alert(
-        'Email Already Registered',
-        'This email is already registered with Google. Please use Google Sign-In instead.',
-        [
-          {
-            text: 'Use Google Sign-In',
-            onPress: () => handleGoogleSignIn(),
-          },
-          {
-            text: 'OK',
-            style: 'cancel',
-          },
-        ]
-      );
-      return;
-    }
-    
-    Alert.alert('Error', message);
   }
-}
 
 
   const handleGoogleSignIn = async () => {
@@ -133,247 +95,249 @@ export default function SignUpScreen({ navigation }) {
     }
   }
 
-  const titleY = useSharedValue(30)
   const titleOpacity = useSharedValue(0)
+  const titleScale = useSharedValue(0.9)
   const formOpacity = useSharedValue(0)
-  const buttonY = useSharedValue(40)
+  const buttonOpacity = useSharedValue(0)
+  const buttonScale = useSharedValue(0.9)
 
   useEffect(() => {
-    titleY.value = withDelay(150, withSpring(0))
-    titleOpacity.value = withDelay(150, withTiming(1, { duration: 400 }))
-    formOpacity.value = withDelay(300, withTiming(1, { duration: 400 }))
-    buttonY.value = withDelay(450, withSpring(0))
+    titleOpacity.value = withDelay(100, withTiming(1, { duration: 400 }))
+    titleScale.value = withDelay(100, withSpring(1, { damping: 10, stiffness: 100 }))
+    formOpacity.value = withDelay(200, withTiming(1, { duration: 400 }))
+    buttonOpacity.value = withDelay(300, withTiming(1, { duration: 400 }))
+    buttonScale.value = withDelay(300, withSpring(1, { damping: 10, stiffness: 100 }))
   }, [])
 
   const titleStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: titleY.value }],
     opacity: titleOpacity.value,
+    transform: [{ scale: titleScale.value }],
   }))
 
   const formStyle = useAnimatedStyle(() => ({ opacity: formOpacity.value }))
-  const buttonStyle = useAnimatedStyle(() => ({ transform: [{ translateY: buttonY.value }] }))
+  const buttonStyle = useAnimatedStyle(() => ({ 
+    opacity: buttonOpacity.value,
+    transform: [{ scale: buttonScale.value }],
+  }))
 
   return (
-    <LinearGradient
-      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      <View style={styles.content}>
-        <Animated.Text style={[styles.title, titleStyle]}>Create Account</Animated.Text>
-        <Animated.Text style={[styles.subtitle, formStyle]}>Join RishiConnect to connect with your peers</Animated.Text>
+    <View style={styles.container}>
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+      
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.Text style={[styles.title, titleStyle]}>
+          Create an account 👋
+        </Animated.Text>
+        <Animated.Text style={[styles.subtitle, formStyle]}>
+          Create your account in seconds. We'll help you find your perfect match.
+        </Animated.Text>
 
         <Animated.View style={formStyle}>
-          <BlurView intensity={60} style={styles.glassField}>
+          <Text style={styles.label}>Email</Text>
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail-outline" size={20} color="#999999" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Full Name"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-              placeholderTextColor="#888"
-            />
-          </BlurView>
-        </Animated.View>
-
-        <Animated.View style={formStyle}>
-          <BlurView intensity={60} style={styles.glassField}>
-            <TextInput
-              style={styles.input}
-              placeholder="University Email (@rishihood.edu.in)"
+              placeholder="Email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor="#888"
+              placeholderTextColor="#666666"
             />
-          </BlurView>
+          </View>
         </Animated.View>
 
         <Animated.View style={formStyle}>
-          <BlurView intensity={60} style={styles.glassField}>
+          <Text style={styles.label}>Password</Text>
+          <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed-outline" size={20} color="#999999" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Password"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
-              placeholderTextColor="#888"
+              secureTextEntry={!showPassword}
+              placeholderTextColor="#666666"
             />
-          </BlurView>
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeIcon}
+            >
+              <Ionicons 
+                name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                size={20} 
+                color="#999999" 
+              />
+            </TouchableOpacity>
+          </View>
         </Animated.View>
 
-        <Animated.View style={formStyle}>
-          <BlurView intensity={60} style={styles.glassField}>
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              placeholderTextColor="#888"
-            />
-          </BlurView>
-        </Animated.View>
-
-        <AnimatedTouchable
-          style={[styles.primaryButton, buttonStyle]}
-          onPress={handleSignUp}
-          disabled={loading}
-          activeOpacity={0.85}
-        >
-          <LinearGradient
-            colors={['#667eea', '#764ba2']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientButton}
+        <Animated.View style={[styles.privacyContainer, formStyle]}>
+          <TouchableOpacity
+            style={styles.checkboxContainer}
+            onPress={() => setAgreeToPrivacy(!agreeToPrivacy)}
           >
-            <Text style={styles.buttonText}>
-              {loading ? 'Creating Account...' : 'Sign Up'}
+            <View style={[styles.checkbox, agreeToPrivacy && styles.checkboxChecked]}>
+              {agreeToPrivacy && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+            </View>
+            <Text style={styles.privacyText}>
+              I agree to RishiConnect <Text style={styles.privacyLink}>Privacy Policy.</Text>
             </Text>
-          </LinearGradient>
-        </AnimatedTouchable>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
-        </View>
+          </TouchableOpacity>
+        </Animated.View>
 
         <AnimatedTouchable
-          style={[styles.googleButton, buttonStyle]}
-          onPress={handleGoogleSignIn}
-          disabled={loading}
+          style={[styles.signUpButton, buttonStyle]}
+          onPress={handleSignUp}
+          disabled={loading || !agreeToPrivacy}
           activeOpacity={0.85}
         >
-          <BlurView intensity={70} style={styles.glassButton}>
-            <Text style={styles.googleButtonText}>🔵 Continue with Google</Text>
-          </BlurView>
+          <Text style={styles.signUpButtonText}>
+            {loading ? 'Creating Account...' : 'Sign up'}
+          </Text>
         </AnimatedTouchable>
 
         <TouchableOpacity
           onPress={() => navigation.navigate('Login')}
-          style={styles.link}
+          style={styles.signInLink}
         >
-          <Text style={styles.linkText}>
-            Already have an account? Login
+          <Text style={styles.signInText}>
+            Already have an account? <Text style={styles.signInLinkText}>Sign in</Text>
           </Text>
         </TouchableOpacity>
-
-        <Text style={styles.terms}>
-          By signing up, you agree to our Terms of Service
-        </Text>
-      </View>
-    </LinearGradient>
+      </ScrollView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1A1A1A',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 10,
+    padding: 8,
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
-    flex: 1,
     paddingHorizontal: 30,
-    paddingTop: 60,
+    paddingTop: 100,
+    paddingBottom: 40,
   },
   title: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '700',
-    color: '#FF6B6B',
-    marginBottom: 10,
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 30,
-    fontWeight: '300',
+    color: '#FFFFFF',
+    marginBottom: 40,
+    fontWeight: '400',
+    opacity: 0.8,
   },
-  glassField: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 15,
+  label: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    backgroundColor: 'rgba(255,255,255,0.2)'
+    borderColor: '#333333',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    height: 56,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    padding: 16,
+    flex: 1,
     fontSize: 16,
-    color: '#222',
+    color: '#FFFFFF',
+    paddingVertical: 0,
   },
-  primaryButton: {
-    borderRadius: 30,
-    overflow: 'hidden',
-    marginTop: 10,
-    shadowColor: '#764ba2',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
+  eyeIcon: {
+    padding: 4,
   },
-  gradientButton: {
-    paddingVertical: 16,
+  privacyContainer: {
+    marginBottom: 30,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#FF6B6B',
+    marginRight: 12,
+    marginTop: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonDisabled: {
-    opacity: 0.5,
+  checkboxChecked: {
+    backgroundColor: '#FF6B6B',
   },
-  buttonText: {
+  privacyText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#FFFFFF',
+    lineHeight: 22,
+  },
+  privacyLink: {
+    color: '#FF6B6B',
+    textDecorationLine: 'underline',
+  },
+  signUpButton: {
+    backgroundColor: '#FF6B6B',
+    borderRadius: 12,
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    opacity: 1,
+  },
+  signUpButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
-    letterSpacing: 0.5,
   },
-  divider: {
-    flexDirection: 'row',
+  signInLink: {
     alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E0E0E0',
-  },
-  dividerText: {
-    marginHorizontal: 15,
-    color: '#999',
-    fontSize: 14,
-  },
-  googleButton: {
-    borderRadius: 30,
-    overflow: 'hidden',
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(66,133,244,0.4)',
-  },
-  glassButton: {
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.25)'
-  },
-  googleButtonText: {
-    color: '#4285F4',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  link: {
     marginTop: 10,
-    alignItems: 'center',
   },
-  linkText: {
-    color: '#FF6B6B',
+  signInText: {
     fontSize: 16,
+    color: '#FFFFFF',
   },
-  terms: {
-    marginTop: 20,
-    textAlign: 'center',
-    color: '#999',
-    fontSize: 12,
+  signInLinkText: {
+    color: '#FF6B6B',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 })

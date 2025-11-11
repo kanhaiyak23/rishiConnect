@@ -8,10 +8,9 @@ import {
   Alert,
 } from 'react-native'
 import Animated, { useSharedValue, withDelay, withSpring, withTiming, useAnimatedStyle } from 'react-native-reanimated'
-import { LinearGradient } from 'expo-linear-gradient'
-import { BlurView } from 'expo-blur'
 import { useDispatch, useSelector } from 'react-redux'
 import { signIn, signInWithGoogle } from '../redux/slices/authSlice'
+import { Ionicons } from '@expo/vector-icons'
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
@@ -19,8 +18,10 @@ export default function LoginScreen({ navigation }) {
   const dispatch = useDispatch()
   const { loading } = useSelector((state) => state.auth)
   
-  const [email, setEmail] = useState('kanhaiya.k23csai@nst.rishihood.edu.in')
-  const [password, setPassword] = useState('kanhaiya')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
 
   const handleLogin = async () => {
   if (!email || !password) {
@@ -86,226 +87,244 @@ export default function LoginScreen({ navigation }) {
     }
   }
 
-  const titleY = useSharedValue(30)
   const titleOpacity = useSharedValue(0)
+  const titleScale = useSharedValue(0.9)
   const formOpacity = useSharedValue(0)
-  const buttonY = useSharedValue(40)
+  const buttonOpacity = useSharedValue(0)
+  const buttonScale = useSharedValue(0.9)
 
   useEffect(() => {
-    titleY.value = withDelay(150, withSpring(0))
-    titleOpacity.value = withDelay(150, withTiming(1, { duration: 400 }))
-    formOpacity.value = withDelay(300, withTiming(1, { duration: 400 }))
-    buttonY.value = withDelay(450, withSpring(0))
+    titleOpacity.value = withDelay(100, withTiming(1, { duration: 400 }))
+    titleScale.value = withDelay(100, withSpring(1, { damping: 10, stiffness: 100 }))
+    formOpacity.value = withDelay(200, withTiming(1, { duration: 400 }))
+    buttonOpacity.value = withDelay(300, withTiming(1, { duration: 400 }))
+    buttonScale.value = withDelay(300, withSpring(1, { damping: 10, stiffness: 100 }))
   }, [])
 
   const titleStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: titleY.value }],
     opacity: titleOpacity.value,
+    transform: [{ scale: titleScale.value }],
   }))
 
   const formStyle = useAnimatedStyle(() => ({ opacity: formOpacity.value }))
-  const buttonStyle = useAnimatedStyle(() => ({ transform: [{ translateY: buttonY.value }] }))
+  const buttonStyle = useAnimatedStyle(() => ({ 
+    opacity: buttonOpacity.value,
+    transform: [{ scale: buttonScale.value }],
+  }))
 
   return (
-    <LinearGradient
-      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
+    <View style={styles.container}>
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+      
       <View style={styles.content}>
-        <Animated.Text style={[styles.title, titleStyle]}>Welcome Back</Animated.Text>
-        <Animated.Text style={[styles.subtitle, formStyle]}>Login to continue</Animated.Text>
+        <Animated.Text style={[styles.title, titleStyle]}>
+          Welcome back 👋
+        </Animated.Text>
+        <Animated.Text style={[styles.subtitle, formStyle]}>
+          Please enter your email & password to sign in.
+        </Animated.Text>
 
         <Animated.View style={formStyle}>
-          <BlurView intensity={60} style={styles.glassField}>
+          <Text style={styles.label}>Email</Text>
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail-outline" size={20} color="#999999" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="University Email"
+              placeholder="Email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor="#888"
+              placeholderTextColor="#666666"
             />
-          </BlurView>
+          </View>
         </Animated.View>
 
         <Animated.View style={formStyle}>
-          <BlurView intensity={60} style={styles.glassField}>
+          <Text style={styles.label}>Password</Text>
+          <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed-outline" size={20} color="#999999" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Password"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
-              placeholderTextColor="#888"
+              secureTextEntry={!showPassword}
+              placeholderTextColor="#666666"
             />
-          </BlurView>
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeIcon}
+            >
+              <Ionicons 
+                name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                size={20} 
+                color="#999999" 
+              />
+            </TouchableOpacity>
+          </View>
         </Animated.View>
 
-        <TouchableOpacity
-          onPress={() => Alert.alert('Info', 'Forgot password functionality coming soon')}
-          style={styles.forgotPassword}
-        >
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
+        <Animated.View style={[styles.optionsContainer, formStyle]}>
+          <TouchableOpacity
+            style={styles.checkboxContainer}
+            onPress={() => setRememberMe(!rememberMe)}
+          >
+            <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+              {rememberMe && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+            </View>
+            <Text style={styles.checkboxLabel}>Remember me</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => Alert.alert('Info', 'Forgot password functionality coming soon')}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
         <AnimatedTouchable
-          style={[styles.primaryButton, buttonStyle]}
+          style={[styles.loginButton, buttonStyle]}
           onPress={handleLogin}
           disabled={loading}
           activeOpacity={0.85}
         >
-          <LinearGradient
-            colors={['#667eea', '#764ba2']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientButton}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? 'Logging in...' : 'Login'}
-            </Text>
-          </LinearGradient>
-        </AnimatedTouchable>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <AnimatedTouchable
-          style={[styles.googleButton, buttonStyle]}
-          onPress={handleGoogleSignIn}
-          disabled={loading}
-          activeOpacity={0.85}
-        >
-          <BlurView intensity={70} style={styles.glassButton}>
-            <Text style={styles.googleButtonText}>🔵 Continue with Google</Text>
-          </BlurView>
+          <Text style={styles.loginButtonText}>
+            {loading ? 'Logging in...' : 'Log in'}
+          </Text>
         </AnimatedTouchable>
 
         <TouchableOpacity
           onPress={() => navigation.navigate('SignUp')}
-          style={styles.link}
+          style={styles.signUpLink}
         >
-          <Text style={styles.linkText}>
-            Don't have an account? Sign Up
+          <Text style={styles.signUpText}>
+            Don't have an account? <Text style={styles.signUpLinkText}>Sign up</Text>
           </Text>
         </TouchableOpacity>
       </View>
-    </LinearGradient>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1A1A1A',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 10,
+    padding: 8,
   },
   content: {
     flex: 1,
     paddingHorizontal: 30,
-    paddingTop: 60,
+    paddingTop: 100,
   },
   title: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '700',
-    color: '#FF6B6B',
-    marginBottom: 10,
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 30,
-    fontWeight: '300',
+    color: '#FFFFFF',
+    marginBottom: 40,
+    fontWeight: '400',
+    opacity: 0.8,
   },
-  glassField: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 15,
+  label: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    backgroundColor: 'rgba(255,255,255,0.2)'
+    borderColor: '#333333',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    height: 56,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    padding: 16,
+    flex: 1,
     fontSize: 16,
-    color: '#222',
+    color: '#FFFFFF',
+    paddingVertical: 0,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 20,
+  eyeIcon: {
+    padding: 4,
   },
-  forgotPasswordText: {
-    color: '#FF6B6B',
-    fontSize: 14,
+  optionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 30,
   },
-  primaryButton: {
-    borderRadius: 30,
-    overflow: 'hidden',
-    marginTop: 10,
-    shadowColor: '#764ba2',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  gradientButton: {
-    paddingVertical: 16,
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#FF6B6B',
+    marginRight: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonDisabled: {
-    opacity: 0.5,
+  checkboxChecked: {
+    backgroundColor: '#FF6B6B',
   },
-  buttonText: {
+  checkboxLabel: {
+    fontSize: 14,
+    color: '#FFFFFF',
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: '#FF6B6B',
+    fontWeight: '500',
+  },
+  loginButton: {
+    backgroundColor: '#FF6B6B',
+    borderRadius: 12,
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  loginButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
-    letterSpacing: 0.5,
   },
-  divider: {
-    flexDirection: 'row',
+  signUpLink: {
     alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E0E0E0',
-  },
-  dividerText: {
-    marginHorizontal: 15,
-    color: '#999',
-    fontSize: 14,
-  },
-  googleButton: {
-    borderRadius: 30,
-    overflow: 'hidden',
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(66,133,244,0.4)',
-  },
-  glassButton: {
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.25)'
-  },
-  googleButtonText: {
-    color: '#4285F4',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  link: {
     marginTop: 10,
-    alignItems: 'center',
   },
-  linkText: {
-    color: '#FF6B6B',
+  signUpText: {
     fontSize: 16,
+    color: '#FFFFFF',
+  },
+  signUpLinkText: {
+    color: '#FF6B6B',
+    fontWeight: '600',
   },
 })

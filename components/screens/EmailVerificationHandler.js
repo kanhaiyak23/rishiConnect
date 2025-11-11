@@ -7,7 +7,7 @@ import { setSession } from '../redux/slices/authSlice';
 import { fetchProfile } from '../redux/slices/profileSlice';
 
 export default function EmailVerificationHandler() {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
   useEffect(() => {
   const handleDeepLink = async ({ url }) => {
     if (url?.startsWith('rishiconnect://auth/callback')) {

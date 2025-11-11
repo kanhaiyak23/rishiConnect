@@ -7,22 +7,22 @@ import {
   Animated,
   Dimensions,
   Image,
-  ActivityIndicator, // Import ActivityIndicator
+  ActivityIndicator,
+  Alert,
 } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
-import LottieView from 'lottie-react-native'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchPotentialMatches, swipeUser, clearRecentMatch } from '../redux/slices/discoverySlice'
-// +++ Import useFocusEffect +++
 import { useFocusEffect } from '@react-navigation/native'
-import RishiConnectLogo from '../RishiConnectLogo'
+import { Ionicons } from '@expo/vector-icons'
+import { BlurView } from 'expo-blur'
+import { LinearGradient } from 'expo-linear-gradient'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
 export default function DiscoveryScreen({ navigation }) {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
-  // +++ Get loading state +++
+  const { profile } = useSelector((state) => state.profile)
   const { potentialMatches, currentIndex, recentMatch, loading } = useSelector((state) => state.discovery)
   
   const translateX = useRef(new Animated.Value(0)).current
@@ -83,12 +83,27 @@ export default function DiscoveryScreen({ navigation }) {
     })
   }
 
-  const handleSkip = () => {
+  const handleUndo = () => {
+    // TODO: Implement undo functionality
+    Alert.alert('Info', 'Undo feature coming soon')
+  }
+
+  const handleReject = () => {
     handleSwipe('left')
   }
 
-  const handleConnect = () => {
+  const handleSuperLike = () => {
+    // TODO: Implement super like functionality
     handleSwipe('right')
+  }
+
+  const handleLike = () => {
+    handleSwipe('right')
+  }
+
+  const handleBoost = () => {
+    // TODO: Implement boost functionality
+    Alert.alert('Info', 'Boost feature coming soon')
   }
 
   const renderCard = () => {
@@ -126,6 +141,11 @@ export default function DiscoveryScreen({ navigation }) {
       outputRange: [0.95, 1, 0.95],
     })
 
+    // Calculate age if available (assuming year is academic year)
+    const displayInfo = []
+    if (currentProfile.year) displayInfo.push(currentProfile.year)
+    if (currentProfile.major) displayInfo.push(currentProfile.major)
+
     return (
       <Animated.View
         style={[
@@ -142,38 +162,64 @@ export default function DiscoveryScreen({ navigation }) {
         ]}
       >
         <Image
-          source={{ uri: currentProfile.photo_url || 'https://placehold.co/400x600/FFF3F3/FF6B6B?text=No+Photo' }}
+          source={{ uri: currentProfile.photo_url || 'https://placehold.co/400x600/2A2A2A/FF6B6B?text=No+Photo' }}
           style={styles.cardImage}
         />
-        <View style={styles.cardInfo}>
+        {/* Image indicators */}
+        <View style={styles.imageIndicators}>
+          {[1, 2, 3, 4, 5].map((index) => (
+            <View
+              key={index}
+              style={[styles.indicator, index === 1 && styles.indicatorActive]}
+            />
+          ))}
+        </View>
+        {/* Profile info overlay */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
+          style={styles.cardInfo}
+        >
           <View style={styles.cardHeader}>
             <Text style={styles.cardName}>{currentProfile.name}</Text>
-            <Text style={styles.cardAge}>{currentProfile.year} • {currentProfile.major}</Text>
+            {displayInfo.length > 0 && (
+              <Text style={styles.cardDetails}>{displayInfo.join(' • ')}</Text>
+            )}
           </View>
-          <Text style={styles.cardBio} numberOfLines={2}>{currentProfile.bio}</Text>
+          {currentProfile.bio && (
+            <Text style={styles.cardBio} numberOfLines={2}>{currentProfile.bio}</Text>
+          )}
           {currentProfile.interests && currentProfile.interests.length > 0 && (
             <View style={styles.interestsContainer}>
               {currentProfile.interests.slice(0, 3).map((interest, index) => (
                 <View key={index} style={styles.interestTag}>
-                  <Text style={styles.interestText}>#{interest}</Text>
+                  <Text style={styles.interestText}>{interest}</Text>
                 </View>
               ))}
             </View>
           )}
-        </View>
+        </LinearGradient>
       </Animated.View>
     )
   }
 
   return (
-    <LinearGradient
-      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <View style={styles.header}>
-        <RishiConnectLogo size="small" showIcon={true} />
+        <View style={styles.headerLeft}>
+          <View style={styles.logoIcon}>
+            <Ionicons name="chatbubble-ellipses" size={24} color="#FF6B6B" />
+            <Ionicons name="heart" size={12} color="#E74C3C" style={styles.heartIcon} />
+          </View>
+          <Text style={styles.appName}>RishiConnect</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerIcon}>
+            <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIcon}>
+            <Ionicons name="options-outline" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.cardContainer}>
@@ -181,68 +227,142 @@ export default function DiscoveryScreen({ navigation }) {
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.skipButton} onPress={handleSkip} disabled={!currentProfile}>
-          <Text style={styles.skipButtonText}>✕</Text>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.undoButton]} 
+          onPress={handleUndo} 
+          disabled={!currentProfile}
+        >
+          <Ionicons name="refresh" size={24} color="#FFFFFF" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.connectButton} onPress={handleConnect} disabled={!currentProfile}>
-          <Text style={styles.connectButtonText}>❤️</Text>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.rejectButton]} 
+          onPress={handleReject} 
+          disabled={!currentProfile}
+        >
+          <Ionicons name="close" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        {/* <TouchableOpacity  */}
+          {/* style={[styles.actionButton, styles.superLikeButton]} 
+          onPress={handleSuperLike} 
+          disabled={!currentProfile}
+        >
+          <Ionicons name="star" size={24} color="#FFFFFF" /> */}
+        {/* </TouchableOpacity> */}
+
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.likeButton]} 
+          onPress={handleLike} 
+          disabled={!currentProfile}
+        >
+          <Ionicons name="heart" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.boostButton]} 
+          onPress={handleBoost} 
+          disabled={!currentProfile}
+        >
+          <Ionicons name="flash" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
-      {/* +++ FIX: This modal will now have access to recentMatch.name +++ */}
       {recentMatch && (
         <View style={styles.matchModal}>
-          {/* Confetti animation - ensure assets/lottie/confetti.json exists */}
-          {/* <LottieView
-            source={require('../../assets/lottie/confetti.json')}
-            autoPlay
-            loop={false}
-            style={styles.confetti}
-          /> */}
-          <LinearGradient colors={['#ffffff', '#f8f8ff']} style={styles.matchContent}>
-            <Text style={styles.matchTitle}>🎉 It's a Match!</Text>
-            <Text style={styles.matchText}>
-              You and {recentMatch.name} are now connected
-            </Text>
-            <TouchableOpacity
-              style={styles.matchButton}
-              onPress={() => {
-                dispatch(clearRecentMatch())
-                navigation.navigate('Chats') // You might want to pass the new chat room ID here
-              }}
-            >
-              <Text style={styles.matchButtonText}>Send a Message</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.matchButtonSecondary}
-              onPress={() => dispatch(clearRecentMatch())}
-            >
-              <Text style={styles.matchButtonSecondaryText}>Keep Swiping</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+          <BlurView intensity={80} style={styles.matchBlur}>
+            <View style={styles.matchContent}>
+              {/* Floating hearts */}
+              <View style={styles.floatingHearts}>
+                <Ionicons name="heart" size={20} color="#FF6B6B" style={styles.floatingHeart1} />
+                <Ionicons name="heart" size={16} color="#FF6B6B" style={styles.floatingHeart2} />
+                <Ionicons name="heart" size={18} color="#FF6B6B" style={styles.floatingHeart3} />
+                <Ionicons name="heart" size={14} color="#FF6B6B" style={styles.floatingHeart4} />
+              </View>
+
+              {/* Profile pictures in heart frames */}
+              <View style={styles.matchProfiles}>
+                <View style={styles.heartFrame}>
+                  <Image
+                    source={{ uri: profile?.photo_url || 'https://placehold.co/100/2A2A2A/FF6B6B?text=You' }}
+                    style={styles.matchPhoto}
+                  />
+                </View>
+                <View style={styles.heartFrame}>
+                  <Image
+                    source={{ uri: recentMatch.photo_url || 'https://placehold.co/100/2A2A2A/FF6B6B?text=Match' }}
+                    style={styles.matchPhoto}
+                  />
+                </View>
+              </View>
+
+              <Text style={styles.matchTitle}>You Got the Match!</Text>
+              <Text style={styles.matchDescription}>
+                You both liked each other. Take charge and start a meaningful conversation.
+              </Text>
+
+              <TouchableOpacity
+                style={styles.letsChatButton}
+                onPress={() => {
+                  dispatch(clearRecentMatch())
+                  navigation.navigate('Chats')
+                }}
+              >
+                <Text style={styles.letsChatButtonText}>Let's Chat</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.maybeLaterButton}
+                onPress={() => dispatch(clearRecentMatch())}
+              >
+                <Text style={styles.maybeLaterButtonText}>Maybe Later</Text>
+              </TouchableOpacity>
+            </View>
+          </BlurView>
         </View>
       )}
-    </LinearGradient>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1A1A1A',
   },
   header: {
-    paddingTop: 60,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 30,
     paddingHorizontal: 20,
-    paddingBottom: 15,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingBottom: 10,
+    backgroundColor: '#1A1A1A',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoIcon: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  heartIcon: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+  },
+  appName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  headerIcon: {
+    padding: 4,
   },
   cardContainer: {
     flex: 1,
@@ -253,102 +373,121 @@ const styles = StyleSheet.create({
   card: {
     width: SCREEN_WIDTH - 40,
     height: 600,
-    borderRadius: 25,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    backgroundColor: '#2A2A2A',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 12,
     overflow: 'hidden',
+    position: 'relative',
   },
   cardImage: {
     width: '100%',
-    height: '70%',
+    height: '75%',
     resizeMode: 'cover',
   },
+  imageIndicators: {
+    position: 'absolute',
+    top: 12,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    zIndex: 10,
+  },
+  indicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  indicatorActive: {
+    backgroundColor: '#FF6B6B',
+    width: 20,
+  },
   cardInfo: {
-    flex: 1,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 20,
-    justifyContent: 'space-between',
+    paddingTop: 40,
   },
   cardHeader: {
-    marginBottom: 10,
+    marginBottom: 8,
   },
   cardName: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
-  cardAge: {
+  cardDetails: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 5,
+    color: '#FFFFFF',
+    opacity: 0.9,
   },
   cardBio: {
-    fontSize: 16,
-    color: '#666',
-    lineHeight: 22,
+    fontSize: 14,
+    color: '#FFFFFF',
+    lineHeight: 20,
+    opacity: 0.9,
+    marginBottom: 8,
   },
   interestsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 10,
+    gap: 8,
   },
   interestTag: {
-    backgroundColor: '#FFF3F3',
+    backgroundColor: 'rgba(255, 107, 107, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 15,
-    marginRight: 8,
-    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FF6B6B',
   },
   interestText: {
-    color: '#FF6B6B',
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 30,
+    gap: 12,
   },
-  skipButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 3,
-    borderColor: '#FF6B6B',
+  actionButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 30,
-    shadowColor: '#FF6B6B',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 4,
   },
-  skipButtonText: {
-    fontSize: 32,
-    color: '#FF6B6B',
+  undoButton: {
+    backgroundColor: '#34A853',
   },
-  connectButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+  rejectButton: {
+    backgroundColor: '#E74C3C',
+  },
+  superLikeButton: {
+    backgroundColor: '#FF9500',
+  },
+  likeButton: {
     backgroundColor: '#FF6B6B',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
   },
-  connectButtonText: {
-    fontSize: 32,
+  boostButton: {
+    backgroundColor: '#4285F4',
   },
   emptyContainer: {
     flex: 1,
@@ -359,67 +498,127 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#FFFFFF',
     marginBottom: 10,
   },
   emptySubtext: {
     fontSize: 16,
-    color: '#666',
+    color: '#999999',
     textAlign: 'center',
   },
   matchModal: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1000,
+  },
+  matchBlur: {
+    width: SCREEN_WIDTH - 60,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   matchContent: {
-    borderRadius: 24,
-    padding: 40,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 20,
+    padding: 32,
     alignItems: 'center',
-    width: SCREEN_WIDTH - 60,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
+    position: 'relative',
   },
-  confetti: {
+  floatingHearts: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
   },
+  floatingHeart1: {
+    position: 'absolute',
+    top: 20,
+    left: 30,
+    opacity: 0.7,
+  },
+  floatingHeart2: {
+    position: 'absolute',
+    top: 40,
+    right: 40,
+    opacity: 0.6,
+  },
+  floatingHeart3: {
+    position: 'absolute',
+    top: 60,
+    left: 50,
+    opacity: 0.5,
+  },
+  floatingHeart4: {
+    position: 'absolute',
+    top: 80,
+    right: 60,
+    opacity: 0.4,
+  },
+  matchProfiles: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+    marginBottom: 24,
+  },
+  heartFrame: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#FF6B6B',
+    padding: 3,
+    overflow: 'hidden',
+  },
+  matchPhoto: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
+    resizeMode: 'cover',
+  },
   matchTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
     color: '#FF6B6B',
-    marginBottom: 10,
-  },
-  matchText: {
-    fontSize: 18,
-    color: '#666',
+    marginBottom: 12,
     textAlign: 'center',
-    marginBottom: 30,
   },
-  matchButton: {
+  matchDescription: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+    opacity: 0.8,
+    paddingHorizontal: 20,
+  },
+  letsChatButton: {
     backgroundColor: '#FF6B6B',
-    paddingVertical: 15,
+    paddingVertical: 16,
     paddingHorizontal: 40,
-    borderRadius: 25,
-    marginBottom: 15,
+    borderRadius: 12,
+    marginBottom: 16,
+    width: '100%',
+    alignItems: 'center',
   },
-  matchButtonText: {
+  letsChatButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
-  matchButtonSecondary: {
-    paddingVertical: 15,
+  maybeLaterButton: {
+    backgroundColor: '#333333',
+    paddingVertical: 16,
     paddingHorizontal: 40,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
   },
-  matchButtonSecondaryText: {
-    color: '#666',
-    fontSize: 16,
+  maybeLaterButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
 })

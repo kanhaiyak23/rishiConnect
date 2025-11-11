@@ -10,16 +10,11 @@ import {
   Image,
 } from 'react-native'
 import Animated, { useSharedValue, withDelay, withSpring, withTiming, useAnimatedStyle } from 'react-native-reanimated'
-import { LinearGradient } from 'expo-linear-gradient'
-import { BlurView } from 'expo-blur'
 import * as ImagePicker from 'expo-image-picker'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateProfile } from '../redux/slices/profileSlice'
 import { supabase } from '../lib/supabase'
-// REMOVED FileSystem as it's no longer needed for this
-// import * as FileSystem from 'expo-file-system' 
-
-// +++ IMPORT THE DECODER +++
+import { Ionicons } from '@expo/vector-icons'
 import { decode } from 'base64-arraybuffer'
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
@@ -168,88 +163,103 @@ export default function ProfileSetupScreen({ navigation, route }) {
   const contentStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }))
 
   return (
-    <LinearGradient
-      colors={['#f5f7fa', '#c3cfe2', '#f093fb']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.Text style={[styles.title, titleStyle]}>Complete Your Profile</Animated.Text>
         <Animated.Text style={[styles.subtitle, contentStyle]}>Tell others about yourself</Animated.Text>
 
         {step === 1 && (
           <>
             <Animated.View style={contentStyle}>
-            <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
-              {photo ? (
-                // +++ USE photo.uri TO DISPLAY THE IMAGE +++
-                <Image source={{ uri: photo.uri }} style={styles.photo} />
-              ) : (
-                <Text style={styles.photoText}>📷 Add Photo</Text>
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
+                {photo ? (
+                  <Image source={{ uri: photo.uri }} style={styles.photo} />
+                ) : (
+                  <View style={styles.photoPlaceholder}>
+                    <Ionicons name="camera-outline" size={40} color="#FF6B6B" />
+                    <Text style={styles.photoText}>Add Photo</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
             </Animated.View>
 
-            <BlurView intensity={60} style={styles.glassField}>
-              <TextInput
-                style={styles.textArea}
-                placeholder="Write a short bio..."
-                value={bio}
-                onChangeText={setBio}
-                multiline
-                numberOfLines={4}
-                maxLength={200}
-                placeholderTextColor="#888"
-              />
-            </BlurView>
+            <Animated.View style={contentStyle}>
+              <Text style={styles.label}>Bio</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.textArea}
+                  placeholder="Write a short bio..."
+                  value={bio}
+                  onChangeText={setBio}
+                  multiline
+                  numberOfLines={4}
+                  maxLength={200}
+                  placeholderTextColor="#666666"
+                />
+              </View>
+              <Text style={styles.charCount}>{bio.length}/200</Text>
+            </Animated.View>
 
             <AnimatedTouchable
-              style={styles.nextButton}
+              style={[styles.nextButton, contentStyle]}
               onPress={() => setStep(2)}
               activeOpacity={0.85}
             >
-              <LinearGradient colors={['#667eea', '#764ba2']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 16, borderRadius: 25, width: '100%', alignItems: 'center' }}>
-                <Text style={styles.nextButtonText}>Next</Text>
-              </LinearGradient>
+              <Text style={styles.nextButtonText}>Next</Text>
             </AnimatedTouchable>
           </>
         )}
 
         {step === 2 && (
           <>
-            <BlurView intensity={60} style={styles.glassField}>
-              <TextInput
-                style={styles.input}
-                placeholder="Academic Year (e.g., 2024)"
-                value={year}
-                onChangeText={setYear}
-                keyboardType="numeric"
-                placeholderTextColor="#888"
-              />
-            </BlurView>
+            <Animated.View style={contentStyle}>
+              <Text style={styles.label}>Academic Year</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="calendar-outline" size={20} color="#999999" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Academic Year (e.g., 2024)"
+                  value={year}
+                  onChangeText={setYear}
+                  keyboardType="numeric"
+                  placeholderTextColor="#666666"
+                />
+              </View>
+            </Animated.View>
 
-            <BlurView intensity={60} style={styles.glassField}>
-              <TextInput
-                style={styles.input}
-                placeholder="Major/Department"
-                value={major}
-                onChangeText={setMajor}
-                placeholderTextColor="#888"
-              />
-            </BlurView>
+            <Animated.View style={contentStyle}>
+              <Text style={styles.label}>Major/Department</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="school-outline" size={20} color="#999999" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Major/Department"
+                  value={major}
+                  onChangeText={setMajor}
+                  placeholderTextColor="#666666"
+                />
+              </View>
+            </Animated.View>
 
-            <BlurView intensity={60} style={styles.glassField}>
-              <TextInput
-                style={styles.input}
-                placeholder="Interests (comma separated, e.g., coding, cricket)"
-                value={interests}
-                onChangeText={setInterests}
-                placeholderTextColor="#888"
-              />
-            </BlurView>
+            <Animated.View style={contentStyle}>
+              <Text style={styles.label}>Interests</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="heart-outline" size={20} color="#999999" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Interests (comma separated, e.g., coding, cricket)"
+                  value={interests}
+                  onChangeText={setInterests}
+                  placeholderTextColor="#666666"
+                />
+              </View>
+            </Animated.View>
 
-            <View style={styles.buttonRow}>
+            <Animated.View style={[styles.buttonRow, contentStyle]}>
               <TouchableOpacity
                 style={[styles.button, styles.backButton]}
                 onPress={() => setStep(1)}
@@ -266,105 +276,122 @@ export default function ProfileSetupScreen({ navigation, route }) {
                   {loading ? 'Completing...' : 'Complete'}
                 </Text>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           </>
         )}
       </ScrollView>
-    </LinearGradient>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1A1A1A',
   },
-  glassField: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    backgroundColor: 'rgba(255,255,255,0.2)'
+  scrollView: {
+    flex: 1,
   },
   content: {
-    flex: 1,
     paddingHorizontal: 30,
-    paddingTop: 60,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#FF6B6B',
-    marginBottom: 10,
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 30,
-    fontWeight: '300',
+    color: '#FFFFFF',
+    marginBottom: 40,
+    fontWeight: '400',
+    opacity: 0.8,
+  },
+  label: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginBottom: 8,
+    fontWeight: '500',
   },
   photoButton: {
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#2A2A2A',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
     marginBottom: 30,
     borderWidth: 2,
-    borderColor: '#E8E8E8',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderColor: '#FF6B6B',
+    overflow: 'hidden',
   },
   photo: {
     width: 150,
     height: 150,
     borderRadius: 75,
   },
+  photoPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   photoText: {
-    fontSize: 18,
-    color: '#666',
+    fontSize: 14,
+    color: '#FF6B6B',
+    marginTop: 8,
+    fontWeight: '500',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333333',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    minHeight: 56,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    backgroundColor: '#F8F8F8',
-    padding: 18,
-    borderRadius: 15,
-    marginBottom: 15,
+    flex: 1,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
+    color: '#FFFFFF',
+    paddingVertical: 16,
   },
   textArea: {
-    backgroundColor: '#F8F8F8',
-    padding: 18,
-    borderRadius: 15,
-    marginBottom: 15,
+    flex: 1,
     fontSize: 16,
-    height: 100,
+    color: '#FFFFFF',
+    paddingVertical: 16,
+    minHeight: 100,
     textAlignVertical: 'top',
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
+  },
+  charCount: {
+    fontSize: 12,
+    color: '#999999',
+    textAlign: 'right',
+    marginTop: -15,
+    marginBottom: 20,
   },
   nextButton: {
-  borderRadius: 30,
-  alignItems: 'center',
-  marginTop: 20,
-  shadowColor: '#764ba2',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.25,
-  shadowRadius: 8,
-  elevation: 5,
-},
+    backgroundColor: '#FF6B6B',
+    borderRadius: 12,
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
   nextButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
-    letterSpacing: 0.5,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -373,20 +400,20 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    padding: 18,
-    borderRadius: 30,
+    paddingVertical: 18,
+    borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   backButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     borderWidth: 2,
     borderColor: '#FF6B6B',
   },
   backButtonText: {
-    color: '#FF6B6B',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
-    letterSpacing: 0.5,
   },
   completeButton: {
     backgroundColor: '#FF6B6B',
@@ -400,7 +427,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
-    letterSpacing: 0.5,
   },
   buttonDisabled: {
     opacity: 0.6,
