@@ -9,6 +9,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  ScrollView
 } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchPotentialMatches, swipeUser, clearRecentMatch } from '../redux/slices/discoverySlice'
@@ -147,6 +148,7 @@ export default function DiscoveryScreen({ navigation }) {
     if (currentProfile.major) displayInfo.push(currentProfile.major)
 
     return (
+   
       <Animated.View
         style={[
           styles.card,
@@ -199,6 +201,7 @@ export default function DiscoveryScreen({ navigation }) {
           )}
         </LinearGradient>
       </Animated.View>
+    
     )
   }
 

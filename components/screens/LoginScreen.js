@@ -22,6 +22,7 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  
 
   const handleLogin = async () => {
   if (!email || !password) {

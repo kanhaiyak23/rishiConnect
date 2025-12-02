@@ -18,6 +18,7 @@ import { Alert } from 'react-native';
 
 // Screens
 import SplashScreen from './screens/SplashScreen'
+import OnboardingScreen from './screens/OnboardingScreen'
 import WelcomeScreen from './screens/WelcomeScreen'
 import LoginScreen from './screens/LoginScreen'
 import SignUpScreen from './screens/SignUpScreen'
@@ -30,7 +31,6 @@ import ProfileScreen from './screens/ProfileScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import EditProfileScreen from './screens/EditProfileScreen'
 
-const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
 
 import { View, Button, Text, TouchableOpacity } from 'react-native';
@@ -42,8 +42,13 @@ import { Ionicons } from '@expo/vector-icons';
 WebBrowser.maybeCompleteAuthSession();
 
 function AuthStack() {
+
+  const Stack = createNativeStackNavigator()
+
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="SignUp" component={SignUpScreen} />
@@ -53,6 +58,7 @@ function AuthStack() {
 }
 
 function MainTabs() {
+  
   return (
     <Tab.Navigator
       screenOptions={{
@@ -119,39 +125,14 @@ function MainTabs() {
 }
 
 function AppNavigator() {
+
+  const Stack = createNativeStackNavigator()
+
   const dispatch = useDispatch()
   const { session, user } = useSelector((state) => state.auth)
   const { profile } = useSelector((state) => state.profile)
   const [isLoading, setIsLoading] = useState(true)
   const [minimumLoadingTime, setMinimumLoadingTime] = useState(true)
-  
-  
-  // Initialize push notifications when user is logged in
-  // useEffect(() => {
-  //   if (user) {
-  //     usePushNotifications();
-  //   }
-  // }, [user]);
-//    useEffect(() => {
-//     // Log when the app opens via a deep link
-//     const subscription = Linking.addEventListener("url", ({ url }) => {
-//       console.log("📩 Deep link received:", url);
-//     });
-
-//     // Check if app was launched from a link
-//     Linking.getInitialURL().then((url) => {
-//       if (url) console.log("🚀 App launched via:", url);
-//     });
-
-//     return () => subscription.remove();
-//   }, []);
-//   function PushNotificationSetup() {
-//   usePushNotifications(); // Handles login/logout internally
-//   return null;
-// }
-// useEffect(() => {
-//   supabase.auth.signOut();  // 👈 clear cached session
-// }, []); 
 
 
   useEffect(() => {
@@ -179,20 +160,17 @@ function AppNavigator() {
     loadData()
   }, [dispatch])
 
-  // if (isLoading || minimumLoadingTime) {
-  //   return <SplashScreen />
-  // }
-
 
   
 
   
 
   return (
-    
+    <SafeAreaView style={{
+      flex: 1
+    }}>
     <Stack.Navigator>
       {!session ? (
-        
         <Stack.Screen name="Auth" component={AuthStack} options={{ headerShown: false }} />
       ) : !profile?.is_complete ? (
         <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
@@ -222,16 +200,19 @@ function AppNavigator() {
       )}
       
     </Stack.Navigator>
+    </SafeAreaView>
   )
 }
 
 export default function App() {
   
   function PushNotificationSetup() {
-  usePushNotifications(); // Handles login/logout internally
-  return null;
-}
-const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
+    usePushNotifications(); // Handles login/logout internally
+    return null;
+  } 
+
+
+  const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
 
   useEffect(() => {
     // Show animated splash for 3 seconds
@@ -241,6 +222,8 @@ const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
 
     return () => clearTimeout(timer);
   }, []);
+
+
 // useEffect(() => {
 //   const { data: subscription } = supabase.auth.onAuthStateChange(
 //     async (event, session) => {
@@ -254,8 +237,11 @@ const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
 
 //   return () => subscription?.subscription.unsubscribe();
 // }, []);
+
+
   return (
    <Provider store={store}>
+
       <SafeAreaProvider>
         {showAnimatedSplash ? (
           // Show your animated splash before main app
@@ -264,10 +250,8 @@ const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
           <>
             <EmailVerificationHandler />
             <NavigationContainer>
-              <SafeAreaView style={{ flex: 1 }}>
                 <PushNotificationSetup />
                 <AppNavigator />
-              </SafeAreaView>
             </NavigationContainer>
           </>
         )}

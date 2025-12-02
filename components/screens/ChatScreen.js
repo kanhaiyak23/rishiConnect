@@ -153,8 +153,8 @@ export default function ChatScreen({ route }) {
 
       <KeyboardAvoidingView
         style={styles.chatContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={90}
+        behavior={Platform.OS === 'ios' ? 'position' : 'height'}
+        keyboardVerticalOffset={30}
       >
         <FlatList
           ref={flatListRef}
@@ -166,9 +166,9 @@ export default function ChatScreen({ route }) {
         />
 
         <View style={styles.inputContainer}>
-          <TouchableOpacity style={styles.plusButton}>
+          {/* <TouchableOpacity style={styles.plusButton}>
             <Ionicons name="add" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TextInput
             style={styles.input}
             placeholder="Send message ..."
@@ -186,9 +186,7 @@ export default function ChatScreen({ route }) {
               <Ionicons name="send" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.micButton}>
-              <Ionicons name="mic-outline" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
+            <View style={{ width: 40 }} />
           )}
         </View>
       </KeyboardAvoidingView>
