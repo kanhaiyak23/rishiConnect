@@ -58,40 +58,6 @@ export const signUp = createAsyncThunk(
 )
 
 
-// export const signInWithGoogle = createAsyncThunk(
-//   'auth/signInWithGoogle',
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       const { data, error } = await supabase.auth.signInWithOAuth({
-//         provider: 'google',
-//         options: {
-//           redirectTo: 
-//           // 'https://vwnwmrikprcqtzjhyblc.supabase.co/auth/v1/callback'
-//           'rishiconnect://auth/callback'
-//         },
-//       });
-
-//       if (error) throw error;
-      
-//       // Start the auth flow. Don't await getSession().
-//       // The onAuthStateChanged listener in App.js will handle the result.
-//       if (data?.url) {
-//         const result = await AuthSession.startAsync({ authUrl: data.url });
-
-//         if (result.type === 'success') {
-//           console.log('Google sign-in success via redirect!');
-//         } else {
-//           console.log('Google sign-in canceled or failed', result);
-//         }
-//       }
-
-//       return data;
-//     } catch (error) {
-//       console.error('Google sign-in error:', error);
-//       return rejectWithValue(error.message);
-//     }
-//   }
-// );
 export const signInWithGoogle = createAsyncThunk(
   'auth/signInWithGoogle',
   async (_, { rejectWithValue }) => {
@@ -169,6 +135,8 @@ export const signOut = createAsyncThunk(
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
+      console.log(error)
+      console.log('User signed out successfully')
       
       // +++ SUCCESS: Clear the user's profile from state +++
       dispatch(clearProfile())

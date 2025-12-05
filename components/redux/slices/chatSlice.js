@@ -5,7 +5,7 @@ export const fetchChatRooms = createAsyncThunk(
   'chat/fetchChatRooms',
   async (userId, { rejectWithValue }) => {
     try {
-      const { data, error } = await supabase
+      const { data: rooms, error } = await supabase
         .from('chat_rooms')
         .select(`
           *,
@@ -14,9 +14,28 @@ export const fetchChatRooms = createAsyncThunk(
         `)
         .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
         .order('updated_at', { ascending: false })
-      
+
       if (error) throw error
-      return data
+
+      // Manually fetch last message for each room to ensure accuracy
+      const roomsWithDetails = await Promise.all(rooms.map(async (room) => {
+        const { data: lastMsg } = await supabase
+          .from('messages')
+          .select('message, created_at')
+          .eq('room_id', room.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+
+        return {
+          ...room,
+          last_message: lastMsg?.message || room.last_message || 'No messages yet',
+          updated_at: lastMsg?.created_at || room.updated_at
+        }
+      }))
+
+      // Sort again because updated_at might have changed
+      return roomsWithDetails.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
     } catch (error) {
       return rejectWithValue(error.message)
     }
@@ -32,7 +51,7 @@ export const fetchMessages = createAsyncThunk(
         .select('*')
         .eq('room_id', roomId)
         .order('created_at', { ascending: true })
-      
+
       if (error) throw error
       return data
     } catch (error) {
@@ -55,18 +74,18 @@ export const sendMessage = createAsyncThunk(
         })
         .select()
         .single()
-      
+
       if (error) throw error
-      
+
       // Update chat room's updated_at and last_message
       await supabase
         .from('chat_rooms')
-        .update({ 
+        .update({
           updated_at: new Date().toISOString(),
           last_message: message
         })
         .eq('id', roomId)
-      
+
       return data
     } catch (error) {
       return rejectWithValue(error.message)
@@ -84,7 +103,7 @@ export const updateMessageStatus = createAsyncThunk(
         .eq('id', messageId)
         .select()
         .single()
-      
+
       if (error) throw error
       return data
     } catch (error) {
@@ -105,7 +124,7 @@ export const sendTypingIndicator = createAsyncThunk(
           is_typing: isTyping,
           updated_at: new Date().toISOString()
         })
-      
+
       if (error) throw error
       return { roomId, userId, isTyping }
     } catch (error) {
@@ -123,7 +142,7 @@ export const unmatchUser = createAsyncThunk(
         .from('chat_rooms')
         .delete()
         .eq('id', roomId)
-      
+
       if (roomError) throw roomError
 
       // Delete the match record (both directions)
@@ -132,13 +151,13 @@ export const unmatchUser = createAsyncThunk(
         .delete()
         .eq('user_id', userId)
         .eq('matched_user_id', matchedUserId)
-      
+
       const { error: matchError2 } = await supabase
         .from('matches')
         .delete()
         .eq('user_id', matchedUserId)
         .eq('matched_user_id', userId)
-      
+
       if (matchError1 || matchError2) throw matchError1 || matchError2
 
       // Delete all messages in the room
@@ -146,7 +165,7 @@ export const unmatchUser = createAsyncThunk(
         .from('messages')
         .delete()
         .eq('room_id', roomId)
-      
+
       if (messagesError) throw messagesError
 
       // Delete typing indicators
@@ -154,7 +173,7 @@ export const unmatchUser = createAsyncThunk(
         .from('typing_indicators')
         .delete()
         .eq('room_id', roomId)
-      
+
       if (typingError) throw typingError
 
       return { roomId }
@@ -200,6 +219,17 @@ const chatSlice = createSlice({
         state.messages[messageIndex] = action.payload
       }
     },
+    updateChatRoomLastMessage: (state, action) => {
+      const { roomId, message, timestamp } = action.payload;
+      const roomIndex = state.chatRooms.findIndex(r => r.id === roomId);
+      if (roomIndex !== -1) {
+        state.chatRooms[roomIndex].last_message = message;
+        state.chatRooms[roomIndex].updated_at = timestamp;
+        // Move this room to the top
+        const room = state.chatRooms.splice(roomIndex, 1)[0];
+        state.chatRooms.unshift(room);
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -222,7 +252,7 @@ const chatSlice = createSlice({
         // We are removing the "instant" message push from here.
         // We will now rely *only* on the real-time subscription
         // which calls the `addMessage` reducer.
-        
+
         // const exists = state.messages.find(m => m.id === action.payload.id);
         // if (!exists) {
         //   state.messages.push(action.payload)
@@ -249,7 +279,7 @@ const chatSlice = createSlice({
   },
 })
 
-export const { setCurrentRoom, addMessage, clearMessages, updateTypingUsers, updateMessageInState } = chatSlice.actions
+export const { setCurrentRoom, addMessage, clearMessages, updateTypingUsers, updateMessageInState, updateChatRoomLastMessage } = chatSlice.actions
 export default chatSlice.reducer
 
 

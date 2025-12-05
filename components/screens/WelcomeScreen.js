@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Button } from "react-native";
 import LottieView from "lottie-react-native";
 import { LinearGradient } from 'expo-linear-gradient'
+import { useBottomSheet } from '../../context/BottomSheetContext'
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
@@ -78,6 +79,7 @@ const ConfettiSystem = () => {
 export default function WelcomeScreen({ navigation }) {
   const animationRef = useRef(null);
   const [visible, setVisible] = useState(false);
+  const { showBottomSheet } = useBottomSheet();
 
   const handlePress = () => {
     console.log("Celebrate button pressed!");
@@ -142,7 +144,7 @@ export default function WelcomeScreen({ navigation }) {
     try {
       await dispatch(signInWithGoogle()).unwrap()
     } catch (error) {
-      Alert.alert('Error', error || 'Failed to sign in with Google')
+      showBottomSheet('Error', error || 'Failed to sign in with Google')
     }
   }
 

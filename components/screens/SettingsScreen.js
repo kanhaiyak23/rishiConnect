@@ -16,8 +16,10 @@ export default function SettingsScreen({ navigation }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const handleLogout = async () => {
+    console.log('Logging out...')
     setShowLogoutModal(false)
     await dispatch(signOut())
+    console.log('Logged out successfully')
   }
 
   const settingsOptions = [

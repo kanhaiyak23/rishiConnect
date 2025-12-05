@@ -4,12 +4,14 @@ import Animated, { useSharedValue, withDelay, withSpring, withTiming, useAnimate
 import { Ionicons } from '@expo/vector-icons'
 import { useDispatch } from 'react-redux'
 import { supabase } from '../lib/supabase'
+import { useBottomSheet } from '../../context/BottomSheetContext'
 
 export default function EmailVerificationScreen({ navigation, route }) {
   const dispatch = useDispatch()
   const email = route?.params?.email || ''
   const [resending, setResending] = useState(false)
-  
+  const { showBottomSheet } = useBottomSheet()
+
   const iconScale = useSharedValue(0)
   const cardOpacity = useSharedValue(0)
 
@@ -32,7 +34,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
 
   const handleResendEmail = async () => {
     if (!email) {
-      Alert.alert('Error', 'Email address not found')
+      showBottomSheet('Error', 'Email address not found')
       return
     }
 
@@ -48,9 +50,9 @@ export default function EmailVerificationScreen({ navigation, route }) {
 
       if (error) throw error
 
-      Alert.alert('Success', 'Verification email has been resent!')
+      showBottomSheet('Success', 'Verification email has been resent!')
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to resend email')
+      showBottomSheet('Error', error.message || 'Failed to resend email')
     } finally {
       setResending(false)
     }
@@ -62,13 +64,13 @@ export default function EmailVerificationScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate('Login')}
       >
         <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
       </TouchableOpacity>
-      
+
       <View style={styles.content}>
         <Animated.View style={[styles.iconContainer, iconStyle]}>
           <View style={styles.iconOuterCircle}>

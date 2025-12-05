@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchChatRooms, setCurrentRoom } from '../redux/slices/chatSlice'
+import { fetchChatRooms, setCurrentRoom, updateChatRoomLastMessage } from '../redux/slices/chatSlice'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { supabase } from '../lib/supabase'
 import { Ionicons } from '@expo/vector-icons'
@@ -122,27 +122,18 @@ const ActiveUserAvatar = ({ activeUser, isOnline, onPress }) => {
   )
 }
 
-// Helper to calculate unread count (simplified - counts recent messages from other user)
-const getUnreadCount = async (roomId, userId, lastViewed) => {
+// Helper to calculate unread count
+const getUnreadCount = async (roomId, userId) => {
   try {
-    const { data, error } = await supabase
+    const { count, error } = await supabase
       .from('messages')
-      .select('id')
+      .select('*', { count: 'exact', head: true })
       .eq('room_id', roomId)
       .neq('sender_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(100)
+      .neq('status', 'read') // Only count messages not marked as read
 
-    if (error || !data) return 0
-
-    // If we have a last viewed time, count messages after that
-    if (lastViewed) {
-      const unread = data.filter(msg => new Date(msg.created_at) > new Date(lastViewed))
-      return Math.min(unread.length, 99)
-    }
-
-    // Otherwise, return count of recent messages (last 10)
-    return Math.min(data.length, 10)
+    if (error) return 0
+    return count || 0
   } catch {
     return 0
   }
@@ -164,8 +155,8 @@ export default function ChatsScreen() {
       const fetchUnreadCounts = async () => {
         const counts = {}
         for (const room of chatRooms) {
-          // For now, pass null as lastViewed - in production, track this in the database
-          const count = await getUnreadCount(room.id, user.id, null)
+          // Fetch unread count based on status
+          const count = await getUnreadCount(room.id, user.id)
           counts[room.id] = count
         }
         setUnreadCounts(counts)
@@ -186,7 +177,7 @@ export default function ChatsScreen() {
         },
       },
     })
-     // Listen for presence changes
+    // Listen for presence changes
     channel.on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState()
       const onlineIds = new Set()
@@ -204,7 +195,7 @@ export default function ChatsScreen() {
       console.log('Online users from Supabase:', Array.from(onlineIds))
       setOnlineUserIds(onlineIds)
     })
-    
+
 
     // Subscribe to channel
     channel.subscribe(async (status) => {
@@ -220,9 +211,9 @@ export default function ChatsScreen() {
       }
     })
 
-   
-    
-    
+
+
+
 
     // Listen for join/leave events
     channel.on('presence', { event: 'join' }, ({ key, newPresences }) => {
@@ -248,7 +239,7 @@ export default function ChatsScreen() {
         return onlineIds
       })
     })
-    
+
 
 
     presenceChannelRef.current = channel
@@ -287,6 +278,12 @@ export default function ChatsScreen() {
     }
   }, [chatRooms, user, onlineUserIds])
 
+  // Keep a ref to chatRooms to access inside subscription without triggering re-effect
+  const chatRoomsRef = useRef(chatRooms)
+  useEffect(() => {
+    chatRoomsRef.current = chatRooms
+  }, [chatRooms])
+
   // useFocusEffect runs every time the screen comes into focus
   useFocusEffect(
     useCallback(() => {
@@ -294,22 +291,18 @@ export default function ChatsScreen() {
         dispatch(fetchChatRooms(user.id))
       }
 
-      // Set up real-time subscription for chat rooms
+      // Set up real-time subscription for chat rooms and messages
       const channel = supabase
-        .channel('public:chat_rooms')
+        .channel('public:chat_rooms_and_messages')
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
             table: 'chat_rooms',
-            // Listen for new chat rooms where this user is user1
             filter: `user1_id=eq.${user?.id}`,
           },
-          (payload) => {
-            // Re-fetch chat rooms when a new room is created
-            dispatch(fetchChatRooms(user.id))
-          }
+          () => dispatch(fetchChatRooms(user.id))
         )
         .on(
           'postgres_changes',
@@ -317,11 +310,38 @@ export default function ChatsScreen() {
             event: 'INSERT',
             schema: 'public',
             table: 'chat_rooms',
-            // Listen for new chat rooms where this user is user2
             filter: `user2_id=eq.${user?.id}`,
           },
+          () => dispatch(fetchChatRooms(user.id))
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+          },
           (payload) => {
-            dispatch(fetchChatRooms(user.id))
+            const newMessage = payload.new;
+            // Find if this message belongs to any of our chat rooms
+            const room = chatRoomsRef.current.find(r => r.id === newMessage.room_id);
+
+            if (room) {
+              // 1. Update Last Message in UI
+              dispatch(updateChatRoomLastMessage({
+                roomId: room.id,
+                message: newMessage.message,
+                timestamp: newMessage.created_at
+              }));
+
+              // 2. Update Unread Count locally
+              if (newMessage.sender_id !== user.id) {
+                setUnreadCounts(prev => ({
+                  ...prev,
+                  [room.id]: (prev[room.id] || 0) + 1
+                }));
+              }
+            }
           }
         )
         .on(
@@ -329,25 +349,22 @@ export default function ChatsScreen() {
           {
             event: 'UPDATE',
             schema: 'public',
-            table: 'chat_rooms',
-            // Listen for updates where this user is user1
-            filter: `user1_id=eq.${user?.id}`,
+            table: 'messages',
           },
           (payload) => {
-            // Re-fetch chat rooms when an update happens
-            dispatch(fetchChatRooms(user.id))
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'chat_rooms',
-            filter: `user2_id=eq.${user?.id}`,
-          },
-          (payload) => {
-            dispatch(fetchChatRooms(user.id))
+            // If a message status changes (e.g. to 'read'), we should re-fetch the unread count for that room
+            const updatedMessage = payload.new;
+            const room = chatRoomsRef.current.find(r => r.id === updatedMessage.room_id);
+
+            if (room && updatedMessage.sender_id !== user.id) {
+              // Re-fetch count for this room
+              getUnreadCount(room.id, user.id).then(count => {
+                setUnreadCounts(prev => ({
+                  ...prev,
+                  [room.id]: count
+                }))
+              })
+            }
           }
         )
         .subscribe()
@@ -356,10 +373,10 @@ export default function ChatsScreen() {
       return () => {
         supabase.removeChannel(channel)
       }
-    }, [user, dispatch])
+    }, [user, dispatch]) // Removed chatRooms from dependency
   )
-// console.log('chatRooms', chatRooms)
-//   console.log('Online users from Supabase:', Array.from(onlineUserIds))
+  // console.log('chatRooms', chatRooms)
+  //   console.log('Online users from Supabase:', Array.from(onlineUserIds))
   const renderChatItem = useCallback(({ item }) => {
     const otherUser = user.id === item.user1_id ? item.user2 : item.user1
     const unreadCount = unreadCounts[item.id] || 0
@@ -368,6 +385,11 @@ export default function ChatsScreen() {
       <TouchableOpacity
         style={styles.chatItem}
         onPress={() => {
+          // Reset unread count for this room
+          setUnreadCounts(prev => ({
+            ...prev,
+            [item.id]: 0
+          }))
           dispatch(setCurrentRoom(item))
           navigation.navigate('Chat', { room: item })
         }}
@@ -469,7 +491,9 @@ export default function ChatsScreen() {
         )}
 
         {/* Chat List */}
-        <FlatList
+        
+      </ScrollView>
+      <FlatList
           data={chatRooms}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderChatItem}
@@ -478,7 +502,6 @@ export default function ChatsScreen() {
           refreshing={loading}
           scrollEnabled={false}
         />
-      </ScrollView>
     </View>
   )
 }
@@ -487,6 +510,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1A1A1A',
+    
+
   },
   header: {
     flexDirection: 'row',

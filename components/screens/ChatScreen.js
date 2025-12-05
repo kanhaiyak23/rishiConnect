@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchMessages, sendMessage, addMessage } from '../redux/slices/chatSlice'
+import { fetchMessages, sendMessage, addMessage, updateMessageStatus } from '../redux/slices/chatSlice'
 import { supabase } from '../lib/supabase'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
@@ -21,7 +21,7 @@ export default function ChatScreen({ route }) {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
   const { messages } = useSelector((state) => state.chat)
-  
+
   const [messageText, setMessageText] = useState('')
   const flatListRef = useRef(null)
 
@@ -32,7 +32,7 @@ export default function ChatScreen({ route }) {
     // Subscribe to new messages
     const subscription = supabase
       .channel(`messages:${room.id}`)
-      .on('postgres_changes', 
+      .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${room.id}` },
         (payload) => {
           dispatch(addMessage(payload.new))
@@ -48,8 +48,24 @@ export default function ChatScreen({ route }) {
   useEffect(() => {
     if (messages.length > 0) {
       flatListRef.current?.scrollToEnd({ animated: true })
+
+      // Mark unread messages as read
+      const markMessagesAsRead = async () => {
+        const unreadMessages = messages.filter(
+          m => m.sender_id !== user.id && m.status !== 'read'
+        )
+
+        if (unreadMessages.length > 0) {
+          // Update in DB and Redux
+          unreadMessages.forEach(msg => {
+            dispatch(updateMessageStatus({ messageId: msg.id, status: 'read' }))
+          })
+        }
+      }
+
+      markMessagesAsRead()
     }
-  }, [messages])
+  }, [messages, user.id, dispatch])
 
   const handleSend = async () => {
     if (!messageText.trim()) return
@@ -87,7 +103,7 @@ export default function ChatScreen({ route }) {
   const renderMessage = ({ item, index }) => {
     const isMyMessage = item.sender_id === user.id
     const prevMessage = index > 0 ? messages[index - 1] : null
-    const showDateSeparator = !prevMessage || 
+    const showDateSeparator = !prevMessage ||
       new Date(item.created_at).toDateString() !== new Date(prevMessage.created_at).toDateString()
 
     return (
@@ -125,16 +141,16 @@ export default function ChatScreen({ route }) {
     )
   }
 
-  
 
-  
 
-  
+
+
+
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
@@ -153,7 +169,7 @@ export default function ChatScreen({ route }) {
 
       <KeyboardAvoidingView
         style={styles.chatContainer}
-        behavior={Platform.OS === 'ios' ? 'position' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={30}
       >
         <FlatList
@@ -203,7 +219,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 40,
+    paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 10,
     backgroundColor: '#1A1A1A',

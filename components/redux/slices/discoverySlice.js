@@ -137,6 +137,9 @@ const discoverySlice = createSlice({
     clearRecentMatch: (state) => {
       state.recentMatch = null
     },
+    nextCardOptimistic: (state, action) => {
+  state.currentIndex += 1;
+}
   },
   extraReducers: (builder) => {
     builder
@@ -165,10 +168,10 @@ const discoverySlice = createSlice({
           state.recentMatch = action.payload.match
         }
         // Increment index to show the next card
-        state.currentIndex += 1
+        // state.currentIndex += 1
       })
   },
 })
 
-export const { nextProfile, resetDiscovery, clearRecentMatch } = discoverySlice.actions
+export const { nextProfile, resetDiscovery, clearRecentMatch,nextCardOptimistic } = discoverySlice.actions
 export default discoverySlice.reducer

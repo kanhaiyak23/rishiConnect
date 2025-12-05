@@ -12,13 +12,15 @@ import Animated, { useSharedValue, withDelay, withSpring, withTiming, useAnimate
 import { useDispatch, useSelector } from 'react-redux'
 import { signUp, signInWithGoogle } from '../redux/slices/authSlice'
 import { Ionicons } from '@expo/vector-icons'
+import { useBottomSheet } from '../../context/BottomSheetContext'
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
 export default function SignUpScreen({ navigation }) {
   const dispatch = useDispatch()
   const { loading } = useSelector((state) => state.auth)
-  
+  const { showBottomSheet } = useBottomSheet()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -26,30 +28,30 @@ export default function SignUpScreen({ navigation }) {
 
   const handleSignUp = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields')
+      showBottomSheet('Error', 'Please fill in all fields')
       return
     }
 
-    if (!agreeToPrivacy) {
-      Alert.alert('Error', 'Please agree to the Privacy Policy')
-      return
-    }
+    
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters')
+      showBottomSheet('Error', 'Password must be at least 6 characters')
       return
     }
+   
+
+
 
     try {
       const result = await dispatch(signUp({ email, password, name: email.split('@')[0] })).unwrap()
-      
+
       // Navigate to email verification screen
       navigation.navigate('EmailVerification', { email })
     } catch (error) {
       let message = typeof error === 'string' ? error : error?.message || 'An error occurred during signup.';
-      
+
       if (message === 'EMAIL_EXISTS' || message.includes('already registered')) {
-        Alert.alert(
+        showBottomSheet(
           'Email Already Exists',
           'This email is already registered. Please sign in instead.',
           [
@@ -65,7 +67,7 @@ export default function SignUpScreen({ navigation }) {
         );
         return;
       } else if (message === 'GOOGLE_OAUTH_EXISTS') {
-        Alert.alert(
+        showBottomSheet(
           'Email Already Registered',
           'This email is already registered with Google. Please use Google Sign-In instead.',
           [
@@ -81,8 +83,8 @@ export default function SignUpScreen({ navigation }) {
         );
         return;
       }
-      
-      Alert.alert('Error', message);
+
+      showBottomSheet('Error', message);
     }
   }
 
@@ -91,7 +93,7 @@ export default function SignUpScreen({ navigation }) {
     try {
       await dispatch(signInWithGoogle()).unwrap()
     } catch (error) {
-      Alert.alert('Error', error)
+      showBottomSheet('Error', error)
     }
   }
 
@@ -115,21 +117,22 @@ export default function SignUpScreen({ navigation }) {
   }))
 
   const formStyle = useAnimatedStyle(() => ({ opacity: formOpacity.value }))
-  const buttonStyle = useAnimatedStyle(() => ({ 
-    opacity: buttonOpacity.value,
-    transform: [{ scale: buttonScale.value }],
-  }))
+  const buttonStyle = useAnimatedStyle(() => ({
+  opacity: buttonOpacity.value,
+  transform: [{ scale: buttonScale.value }],
+}), []); // 👈 ADD EMPTY DEP ARRAY
 
+//  
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
       >
         <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
       </TouchableOpacity>
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -173,16 +176,16 @@ export default function SignUpScreen({ navigation }) {
               onPress={() => setShowPassword(!showPassword)}
               style={styles.eyeIcon}
             >
-              <Ionicons 
-                name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                size={20} 
-                color="#999999" 
+              <Ionicons
+                name={showPassword ? "eye-outline" : "eye-off-outline"}
+                size={20}
+                color="#999999"
               />
             </TouchableOpacity>
           </View>
         </Animated.View>
 
-        <Animated.View style={[styles.privacyContainer, formStyle]}>
+        {/* <Animated.View style={[styles.privacyContainer, formStyle]}>
           <TouchableOpacity
             style={styles.checkboxContainer}
             onPress={() => setAgreeToPrivacy(!agreeToPrivacy)}
@@ -194,13 +197,13 @@ export default function SignUpScreen({ navigation }) {
               I agree to RishiConnect <Text style={styles.privacyLink}>Privacy Policy.</Text>
             </Text>
           </TouchableOpacity>
-        </Animated.View>
+        </Animated.View> */}
 
         <AnimatedTouchable
           style={[styles.signUpButton, buttonStyle]}
           onPress={handleSignUp}
-          disabled={loading || !agreeToPrivacy}
-          activeOpacity={0.85}
+          disabled={loading}
+        //  activeOpacity={agreeToPrivacy ? 0.85 : 0}
         >
           <Text style={styles.signUpButtonText}>
             {loading ? 'Creating Account...' : 'Sign up'}

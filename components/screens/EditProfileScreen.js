@@ -6,11 +6,13 @@ import { decode } from 'base64-arraybuffer'
 import { updateProfile, fetchProfile } from '../redux/slices/profileSlice'
 import { supabase } from '../lib/supabase'
 import { Ionicons } from '@expo/vector-icons'
+import { useBottomSheet } from '../../context/BottomSheetContext'
 
 export default function EditProfileScreen({ navigation }) {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
   const { profile, loading } = useSelector((state) => state.profile)
+  const { showBottomSheet } = useBottomSheet()
 
   const [name, setName] = useState('')
   const [bio, setBio] = useState('')
@@ -41,7 +43,7 @@ export default function EditProfileScreen({ navigation }) {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'We need permission to access your photos')
+      showBottomSheet('Permission needed', 'We need permission to access your photos')
       return
     }
 
@@ -60,7 +62,7 @@ export default function EditProfileScreen({ navigation }) {
 
   const handleSave = async () => {
     if (!name || !year || !major) {
-      Alert.alert('Error', 'Please fill in Name, Year and Major')
+      showBottomSheet('Error', 'Please fill in Name, Year and Major')
       return
     }
 
@@ -99,11 +101,12 @@ export default function EditProfileScreen({ navigation }) {
 
       const result = await dispatch(updateProfile({ userId: user.id, profileData: updated })).unwrap()
       if (result) {
-        Alert.alert('Success', 'Profile updated successfully')
-        navigation.goBack()
+        showBottomSheet('Success', 'Profile updated successfully', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ])
       }
     } catch (e) {
-      Alert.alert('Update Failed', e.message || String(e))
+      showBottomSheet('Update Failed', e.message || String(e))
     } finally {
       setSaving(false)
     }
@@ -114,7 +117,7 @@ export default function EditProfileScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >

@@ -11,80 +11,81 @@ import Animated, { useSharedValue, withDelay, withSpring, withTiming, useAnimate
 import { useDispatch, useSelector } from 'react-redux'
 import { signIn, signInWithGoogle } from '../redux/slices/authSlice'
 import { Ionicons } from '@expo/vector-icons'
+import { useBottomSheet } from '../../context/BottomSheetContext'
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
 export default function LoginScreen({ navigation }) {
   const dispatch = useDispatch()
   const { loading } = useSelector((state) => state.auth)
-  
+  const { showBottomSheet } = useBottomSheet()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
   
 
   const handleLogin = async () => {
-  if (!email || !password) {
-    Alert.alert('Error', 'Please fill in all fields');
-    return;
-  }
-
-  try {
-    const result = await dispatch(signIn({ email, password })).unwrap();
-
-    // result.user is the Supabase user object
-    const user = result.user;
-
-    if (!user) {
-      Alert.alert('Error', 'Login failed. Please try again.');
+    if (!email || !password) {
+      showBottomSheet('Error', 'Please fill in all fields');
       return;
     }
 
-    // Check if email is confirmed
-    if (!user.email_confirmed_at) {
-      Alert.alert(
-        'Email not verified',
-        `Please check your email (${user.email}) and verify your account before logging in.`
-      );
-      return;
-    }
+    try {
+      const result = await dispatch(signIn({ email, password })).unwrap();
 
-    // If verified, continue with navigation (handled by App auth state)
-    console.log('Logged in user:', user); // Full user object for debugging
+      // result.user is the Supabase user object
+      const user = result.user;
 
-  } catch (error) {
-    let message = typeof error === 'string' ? error : error?.message || 'An error occurred during login.';
-    
-    // Handle specific error cases
-    if (message === 'GOOGLE_OAUTH_EXISTS') {
-      Alert.alert(
-        'Email Registered with Google',
-        'This email is already registered with Google. Please use Google Sign-In instead.',
-        [
-          {
-            text: 'Use Google Sign-In',
-            onPress: () => handleGoogleSignIn(),
-          },
-          {
-            text: 'OK',
-            style: 'cancel',
-          },
-        ]
-      );
-      return;
+      if (!user) {
+        showBottomSheet('Error', 'Login failed. Please try again.');
+        return;
+      }
+
+      // Check if email is confirmed
+      if (!user.email_confirmed_at) {
+        showBottomSheet(
+          'Email not verified',
+          `Please check your email (${user.email}) and verify your account before logging in.`
+        );
+        return;
+      }
+
+      // If verified, continue with navigation (handled by App auth state)
+      console.log('Logged in user:', user); // Full user object for debugging
+
+    } catch (error) {
+      let message = typeof error === 'string' ? error : error?.message || 'An error occurred during login.';
+
+      // Handle specific error cases
+      if (message === 'GOOGLE_OAUTH_EXISTS') {
+        showBottomSheet(
+          'Email Registered with Google',
+          'This email is already registered with Google. Please use Google Sign-In instead.',
+          [
+            {
+              text: 'Use Google Sign-In',
+              onPress: () => handleGoogleSignIn(),
+            },
+            {
+              text: 'OK',
+              style: 'cancel',
+            },
+          ]
+        );
+        return;
+      }
+
+      showBottomSheet('Error', message);
     }
-    
-    Alert.alert('Error', message);
-  }
-};
+  };
 
 
   const handleGoogleSignIn = async () => {
     try {
       await dispatch(signInWithGoogle()).unwrap()
     } catch (error) {
-      Alert.alert('Error', error)
+      showBottomSheet('Error', error)
     }
   }
 
@@ -108,20 +109,21 @@ export default function LoginScreen({ navigation }) {
   }))
 
   const formStyle = useAnimatedStyle(() => ({ opacity: formOpacity.value }))
-  const buttonStyle = useAnimatedStyle(() => ({ 
-    opacity: buttonOpacity.value,
-    transform: [{ scale: buttonScale.value }],
-  }))
+  const buttonStyle = useAnimatedStyle(() => ({
+  opacity: buttonOpacity.value,
+  transform: [{ scale: buttonScale.value }],
+}), []);// 👈 ADD EMPTY DEP ARRAY
+
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
       >
         <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
       </TouchableOpacity>
-      
+
       <View style={styles.content}>
         <Animated.Text style={[styles.title, titleStyle]}>
           Welcome back 👋
@@ -162,27 +164,19 @@ export default function LoginScreen({ navigation }) {
               onPress={() => setShowPassword(!showPassword)}
               style={styles.eyeIcon}
             >
-              <Ionicons 
-                name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                size={20} 
-                color="#999999" 
+              <Ionicons
+                name={showPassword ? "eye-outline" : "eye-off-outline"}
+                size={20}
+                color="#999999"
               />
             </TouchableOpacity>
           </View>
         </Animated.View>
 
         <Animated.View style={[styles.optionsContainer, formStyle]}>
+          
           <TouchableOpacity
-            style={styles.checkboxContainer}
-            onPress={() => setRememberMe(!rememberMe)}
-          >
-            <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-              {rememberMe && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-            </View>
-            <Text style={styles.checkboxLabel}>Remember me</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => Alert.alert('Info', 'Forgot password functionality coming soon')}
+            onPress={() => showBottomSheet('Info', 'Forgot password functionality coming soon')}
           >
             <Text style={styles.forgotPasswordText}>Forgot password?</Text>
           </TouchableOpacity>
@@ -192,7 +186,7 @@ export default function LoginScreen({ navigation }) {
           style={[styles.loginButton, buttonStyle]}
           onPress={handleLogin}
           disabled={loading}
-          activeOpacity={0.85}
+          // activeOpacity={0.85}
         >
           <Text style={styles.loginButtonText}>
             {loading ? 'Logging in...' : 'Log in'}

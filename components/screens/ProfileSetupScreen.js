@@ -16,13 +16,15 @@ import { updateProfile } from '../redux/slices/profileSlice'
 import { supabase } from '../lib/supabase'
 import { Ionicons } from '@expo/vector-icons'
 import { decode } from 'base64-arraybuffer'
+import { useBottomSheet } from '../../context/BottomSheetContext'
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
 export default function ProfileSetupScreen({ navigation, route }) {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
-  
+  const { showBottomSheet } = useBottomSheet()
+
   const [step, setStep] = useState(1)
   const [bio, setBio] = useState('')
   const [year, setYear] = useState('')
@@ -33,9 +35,9 @@ export default function ProfileSetupScreen({ navigation, route }) {
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    
+
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'We need permission to access your photos')
+      showBottomSheet('Permission needed', 'We need permission to access your photos')
       return
     }
 
@@ -61,9 +63,9 @@ export default function ProfileSetupScreen({ navigation, route }) {
       const { data: { session } } = await supabase.auth.getSession();
       console.log("Redux user ID:", user.id);
       console.log("Supabase session user ID:", session?.user?.id);
-      
+
       if (session?.user?.id !== user.id) {
-        Alert.alert("Auth Mismatch", "The Supabase client is not authenticated as the correct user. Please log out and log back in.");
+        showBottomSheet("Auth Mismatch", "The Supabase client is not authenticated as the correct user. Please log out and log back in.");
         return;
       }
     } catch (e) {
@@ -71,21 +73,21 @@ export default function ProfileSetupScreen({ navigation, route }) {
       return;
     }
     if (!bio || !year || !major) {
-      Alert.alert('Error', 'Please fill in all required fields')
+      showBottomSheet('Error', 'Please fill in all required fields')
       return
     }
 
     setLoading(true)
-    
+
     let photoUrl = null
-    
+
     // Upload photo to Supabase Storage if selected
     if (photo) { // 'photo' is now an object
       try {
         // +++ 1. Get Base64 and file extension from the state object +++
         const base64 = photo.base64
         const fileExt = photo.uri.split('.').pop() // Get extension from the URI
-        
+
         const fileName = `${user.id}_${Date.now()}.${fileExt}`
         const contentType = `image/${fileExt}`
 
@@ -111,12 +113,12 @@ export default function ProfileSetupScreen({ navigation, route }) {
 
       } catch (error) {
         console.error('Error uploading image:', error.message)
-        Alert.alert('Upload Error', 'Failed to upload your photo. Please try again.')
+        showBottomSheet('Upload Error', 'Failed to upload your photo. Please try again.')
         setLoading(false) // Stop loading if upload fails
         return // Stop execution
       }
     }
-    
+
     // --- This part runs only if photo upload is skipped or successful ---
     try {
       // Create profile
@@ -137,9 +139,9 @@ export default function ProfileSetupScreen({ navigation, route }) {
       if (error) throw error
 
       dispatch(updateProfile({ userId: user.id, profileData: newProfileData }));
-     
+
     } catch (error) {
-      Alert.alert('Error', error.message)
+      showBottomSheet('Error', error.message)
     } finally {
       setLoading(false)
     }
@@ -164,7 +166,7 @@ export default function ProfileSetupScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}

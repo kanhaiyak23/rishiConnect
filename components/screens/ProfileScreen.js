@@ -27,16 +27,16 @@ export default function ProfileScreen({ navigation }) {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.logoIcon}>
-            <Ionicons name="chatbubble-ellipses" size={24} color="#FF6B6B" />
-            <Ionicons name="heart" size={12} color="#E74C3C" style={styles.heartIcon} />
+             <Image
+                          source={require('../../assets/iconf.png')}
+                          style={styles.appIcon}
+                          resizeMode="contain"
+                        />
           </View>
           <Text style={styles.headerTitle}>Profile</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.upgradeButton}>
-            <Ionicons name="star" size={20} color="#FFFFFF" />
-            <Text style={styles.upgradeText}>UPGRADE</Text>
-          </TouchableOpacity>
+          
           <TouchableOpacity 
             style={styles.settingsButton}
             onPress={() => navigation.navigate('Settings')}
@@ -50,14 +50,7 @@ export default function ProfileScreen({ navigation }) {
         {/* Profile Picture Section */}
         <View style={styles.profilePictureSection}>
           {/* Image indicators */}
-          <View style={styles.imageIndicators}>
-            {[1, 2, 3, 4, 5].map((index) => (
-              <View
-                key={index}
-                style={[styles.indicator, index === 1 && styles.indicatorActive]}
-              />
-            ))}
-          </View>
+          
           <Image
             source={{ uri: profile?.photo_url || 'https://placehold.co/400/2A2A2A/FF6B6B?text=No+Photo' }}
             style={styles.profileImage}
@@ -125,7 +118,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 40,
+    paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 10,
     backgroundColor: '#1A1A1A',
@@ -135,8 +128,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoIcon: {
-    position: 'relative',
+   
     marginRight: 12,
+  },
+  appIcon: {
+    width: 30,  
+    height: 30,
+    resizeMode: 'center',
   },
   heartIcon: {
     position: 'absolute',
@@ -176,7 +174,7 @@ const styles = StyleSheet.create({
   profilePictureSection: {
     position: 'relative',
     marginHorizontal: 20,
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 24,
     borderRadius: 20,
     overflow: 'hidden',
