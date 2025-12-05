@@ -8,9 +8,10 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchMessages, sendMessage, addMessage, updateMessageStatus } from '../redux/slices/chatSlice'
+import { fetchMessages, sendMessage, addMessage, updateMessageStatus, unmatchUser } from '../redux/slices/chatSlice'
 import { supabase } from '../lib/supabase'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
@@ -26,13 +27,17 @@ export default function ChatScreen({ route }) {
   const flatListRef = useRef(null)
 
   const otherUser = user.id === room.user1_id ? room.user2 : room.user1
+
+  // ------------------------
+  // FETCH + REALTIME MESSAGES
+  // ------------------------
   useEffect(() => {
     dispatch(fetchMessages(room.id))
 
-    // Subscribe to new messages
     const subscription = supabase
       .channel(`messages:${room.id}`)
-      .on('postgres_changes',
+      .on(
+        'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${room.id}` },
         (payload) => {
           dispatch(addMessage(payload.new))
@@ -45,37 +50,37 @@ export default function ChatScreen({ route }) {
     }
   }, [room.id])
 
+  // ------------------------
+  // MARK MESSAGES AS READ
+  // ------------------------
   useEffect(() => {
     if (messages.length > 0) {
       flatListRef.current?.scrollToEnd({ animated: true })
 
-      // Mark unread messages as read
-      const markMessagesAsRead = async () => {
-        const unreadMessages = messages.filter(
-          m => m.sender_id !== user.id && m.status !== 'read'
-        )
+      const unreadMessages = messages.filter(
+        m => m.sender_id !== user.id && m.status !== 'read'
+      )
 
-        if (unreadMessages.length > 0) {
-          // Update in DB and Redux
-          unreadMessages.forEach(msg => {
-            dispatch(updateMessageStatus({ messageId: msg.id, status: 'read' }))
-          })
-        }
-      }
-
-      markMessagesAsRead()
+      unreadMessages.forEach(msg => {
+        dispatch(updateMessageStatus({ messageId: msg.id, status: 'read' }))
+      })
     }
-  }, [messages, user.id, dispatch])
+  }, [messages])
 
+  // ------------------------
+  // SEND MESSAGE
+  // ------------------------
   const handleSend = async () => {
     if (!messageText.trim()) return
 
     try {
-      await dispatch(sendMessage({
-        roomId: room.id,
-        senderId: user.id,
-        message: messageText,
-      })).unwrap()
+      await dispatch(
+        sendMessage({
+          roomId: room.id,
+          senderId: user.id,
+          message: messageText,
+        })
+      ).unwrap()
 
       setMessageText('')
     } catch (error) {
@@ -83,27 +88,56 @@ export default function ChatScreen({ route }) {
     }
   }
 
+  // ------------------------
+  // FORMAT MESSAGE TIME
+  // ------------------------
   const formatMessageTime = (isoString) => {
     if (!isoString) return ''
     const date = new Date(isoString)
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
-  const formatDateSeparator = (date) => {
-    const today = new Date()
-    const messageDate = new Date(date)
-    const diffTime = today - messageDate
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  // ------------------------
+  // UNMATCH USER
+  // ------------------------
+  const handleUnmatch = () => {
+    Alert.alert(
+      "Unmatch User",
+      "Are you sure you want to unmatch with this user?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Unmatch",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await dispatch(
+                unmatchUser({
+                  roomId: room.id,
+                  userId: user.id,
+                  matchedUserId: otherUser.id
+                })
+              ).unwrap()
 
-    if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Yesterday'
-    return messageDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+              navigation.goBack()
+            } catch (error) {
+              Alert.alert("Error", "Failed to unmatch user.")
+            }
+          }
+        }
+      ]
+    )
   }
 
+  // ------------------------
+  // RENDER MESSAGE ITEM
+  // ------------------------
   const renderMessage = ({ item, index }) => {
     const isMyMessage = item.sender_id === user.id
+
     const prevMessage = index > 0 ? messages[index - 1] : null
-    const showDateSeparator = !prevMessage ||
+    const showDateSeparator =
+      !prevMessage ||
       new Date(item.created_at).toDateString() !== new Date(prevMessage.created_at).toDateString()
 
     return (
@@ -111,29 +145,33 @@ export default function ChatScreen({ route }) {
         {showDateSeparator && (
           <View style={styles.dateSeparator}>
             <Text style={styles.dateSeparatorText}>
-              {formatDateSeparator(item.created_at)}
+              {new Date(item.created_at).toDateString()}
             </Text>
           </View>
         )}
-        <View style={[
-          styles.messageContainer,
-          isMyMessage ? styles.myMessage : styles.otherMessage,
-        ]}>
-          <Text style={[
-            styles.messageText,
-            isMyMessage ? styles.myMessageText : styles.otherMessageText,
-          ]}>
+
+        <View
+          style={[
+            styles.messageContainer,
+            isMyMessage ? styles.myMessage : styles.otherMessage
+          ]}
+        >
+          <Text
+            style={[
+              styles.messageText,
+              isMyMessage ? styles.myMessageText : styles.otherMessageText
+            ]}
+          >
             {item.message}
           </Text>
+
           <View style={styles.messageFooter}>
-            <Text style={[
-              styles.messageTime,
-              isMyMessage ? styles.myMessageTime : styles.otherMessageTime,
-            ]}>
+            <Text style={styles.messageTime}>
               {formatMessageTime(item.created_at)}
             </Text>
+
             {isMyMessage && (
-              <Ionicons name="checkmark" size={14} color="rgba(255,255,255,0.7)" style={styles.checkIcon} />
+              <Ionicons name="checkmark" size={14} color="#fff" />
             )}
           </View>
         </View>
@@ -141,36 +179,35 @@ export default function ChatScreen({ route }) {
     )
   }
 
-
-
-
-
-
-
+  // ------------------------
+  // RETURN UI
+  // ------------------------
   return (
     <View style={styles.container}>
+      
+      {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{otherUser?.name || 'Chat'}</Text>
+
+        <Text style={styles.headerTitle}>{otherUser?.name || "Chat"}</Text>
+
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.headerIcon}>
             <Ionicons name="call-outline" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerIcon}>
-            <Ionicons name="videocam-outline" size={24} color="#FFFFFF" />
+
+          <TouchableOpacity style={styles.headerIcon} onPress={handleUnmatch}>
+            <Ionicons name="ellipsis-vertical" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>
 
+      {/* CHAT + INPUT */}
       <KeyboardAvoidingView
         style={styles.chatContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={30}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <FlatList
           ref={flatListRef}
@@ -182,9 +219,6 @@ export default function ChatScreen({ route }) {
         />
 
         <View style={styles.inputContainer}>
-          {/* <TouchableOpacity style={styles.plusButton}>
-            <Ionicons name="add" size={24} color="#FFFFFF" />
-          </TouchableOpacity> */}
           <TextInput
             style={styles.input}
             placeholder="Send message ..."
@@ -192,13 +226,10 @@ export default function ChatScreen({ route }) {
             value={messageText}
             onChangeText={setMessageText}
             multiline
-            maxLength={500}
           />
+
           {messageText.trim() ? (
-            <TouchableOpacity
-              style={styles.sendButton}
-              onPress={handleSend}
-            >
+            <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
               <Ionicons name="send" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           ) : (
@@ -206,151 +237,152 @@ export default function ChatScreen({ route }) {
           )}
         </View>
       </KeyboardAvoidingView>
+
     </View>
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1A1A1A',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    backgroundColor: '#1A1A1A',
-    borderBottomWidth: 1,
-    borderBottomColor: '#333333',
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    flex: 1,
-    marginLeft: 16,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  headerIcon: {
-    padding: 4,
-  },
-  chatContainer: {
-    flex: 1,
-  },
-  messagesList: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  dateSeparator: {
-    alignItems: 'center',
-    marginVertical: 16,
-  },
-  dateSeparatorText: {
-    backgroundColor: '#2A2A2A',
-    color: '#FFFFFF',
-    fontSize: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  messageContainer: {
-    maxWidth: '80%',
-    marginBottom: 12,
-    padding: 12,
-    borderRadius: 16,
-  },
-  myMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#FF6B6B',
-    borderBottomRightRadius: 4,
-  },
-  otherMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#2A2A2A',
-    borderBottomLeftRadius: 4,
-  },
-  messageText: {
-    fontSize: 16,
-    marginBottom: 6,
-    lineHeight: 20,
-  },
-  myMessageText: {
-    color: '#FFFFFF',
-  },
-  otherMessageText: {
-    color: '#FFFFFF',
-  },
-  messageFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 4,
-  },
-  messageTime: {
-    fontSize: 11,
-  },
-  myMessageTime: {
-    color: 'rgba(255,255,255,0.7)',
-  },
-  otherMessageTime: {
-    color: '#999999',
-  },
-  checkIcon: {
-    marginLeft: 2,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#1A1A1A',
-    borderTopWidth: 1,
-    borderTopColor: '#333333',
-    alignItems: 'center',
-    gap: 12,
-  },
-  plusButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#2A2A2A',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#2A2A2A',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#FFFFFF',
-    maxHeight: 100,
-    borderRadius: 20,
-  },
-  micButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#2A2A2A',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FF6B6B',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-})
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#1A1A1A',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingTop: 20,
+      paddingHorizontal: 20,
+      paddingBottom: 10,
+      backgroundColor: '#1A1A1A',
+      borderBottomWidth: 1,
+      borderBottomColor: '#333333',
+    },
+    backButton: {
+      padding: 4,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: '#FFFFFF',
+      flex: 1,
+      marginLeft: 16,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      gap: 16,
+    },
+    headerIcon: {
+      padding: 4,
+    },
+    chatContainer: {
+      flex: 1,
+    },
+    messagesList: {
+      padding: 20,
+      paddingBottom: 10,
+    },
+    dateSeparator: {
+      alignItems: 'center',
+      marginVertical: 16,
+    },
+    dateSeparatorText: {
+      backgroundColor: '#2A2A2A',
+      color: '#FFFFFF',
+      fontSize: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+      overflow: 'hidden',
+    },
+    messageContainer: {
+      maxWidth: '80%',
+      marginBottom: 12,
+      padding: 12,
+      borderRadius: 16,
+    },
+    myMessage: {
+      alignSelf: 'flex-end',
+      backgroundColor: '#FF6B6B',
+      borderBottomRightRadius: 4,
+    },
+    otherMessage: {
+      alignSelf: 'flex-start',
+      backgroundColor: '#2A2A2A',
+      borderBottomLeftRadius: 4,
+    },
+    messageText: {
+      fontSize: 16,
+      marginBottom: 6,
+      lineHeight: 20,
+    },
+    myMessageText: {
+      color: '#FFFFFF',
+    },
+    otherMessageText: {
+      color: '#FFFFFF',
+    },
+    messageFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      gap: 4,
+    },
+    messageTime: {
+      fontSize: 11,
+    },
+    myMessageTime: {
+      color: 'rgba(255,255,255,0.7)',
+    },
+    otherMessageTime: {
+      color: '#999999',
+    },
+    checkIcon: {
+      marginLeft: 2,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      padding: 12,
+      paddingHorizontal: 16,
+      backgroundColor: '#1A1A1A',
+      borderTopWidth: 1,
+      borderTopColor: '#333333',
+      alignItems: 'center',
+      gap: 12,
+    },
+    plusButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: '#2A2A2A',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    input: {
+      flex: 1,
+      backgroundColor: '#2A2A2A',
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: '#FFFFFF',
+      maxHeight: 100,
+      borderRadius: 20,
+    },
+    micButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: '#2A2A2A',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    sendButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: '#FF6B6B',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  })

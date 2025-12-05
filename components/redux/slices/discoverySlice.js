@@ -116,6 +116,41 @@ export const swipeUser = createAsyncThunk(
   }
 )
 
+export const refreshDiscovery = createAsyncThunk(
+  'discovery/refreshDiscovery',
+  async ({ userId, currentMatches, currentIndex }, { dispatch, rejectWithValue }) => {
+    try {
+      // 1. Identify users to "pass" (all remaining cards)
+      const remainingUsers = currentMatches.slice(currentIndex)
+
+      if (remainingUsers.length > 0) {
+        const swipesToInsert = remainingUsers.map(profile => ({
+          user_id: userId,
+          target_user_id: profile.id,
+          action: 'pass'
+        }))
+
+        // 2. Bulk insert swipes
+        const { error } = await supabase
+          .from('swipes')
+          .insert(swipesToInsert)
+
+        if (error) throw error
+      }
+
+      // 3. Reset local state
+      dispatch(resetDiscovery())
+
+      // 4. Fetch new matches
+      dispatch(fetchPotentialMatches(userId))
+
+      return
+    } catch (error) {
+      return rejectWithValue(error.message)
+    }
+  }
+)
+
 const discoverySlice = createSlice({
   name: 'discovery',
   initialState: {
@@ -138,8 +173,8 @@ const discoverySlice = createSlice({
       state.recentMatch = null
     },
     nextCardOptimistic: (state, action) => {
-  state.currentIndex += 1;
-}
+      state.currentIndex += 1;
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -173,5 +208,5 @@ const discoverySlice = createSlice({
   },
 })
 
-export const { nextProfile, resetDiscovery, clearRecentMatch,nextCardOptimistic } = discoverySlice.actions
+export const { nextProfile, resetDiscovery, clearRecentMatch, nextCardOptimistic } = discoverySlice.actions
 export default discoverySlice.reducer

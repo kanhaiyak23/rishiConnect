@@ -10,10 +10,13 @@ import {
 import { useDispatch } from 'react-redux'
 import { signOut } from '../redux/slices/authSlice'
 import { Ionicons } from '@expo/vector-icons'
+import { useBottomSheet } from '../../context/BottomSheetContext'
 
 export default function SettingsScreen({ navigation }) {
   const dispatch = useDispatch()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const { showBottomSheet } = useBottomSheet()
+
 
   const handleLogout = async () => {
     console.log('Logging out...')
@@ -35,7 +38,7 @@ export default function SettingsScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
@@ -47,21 +50,53 @@ export default function SettingsScreen({ navigation }) {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Membership Banner */}
-        <TouchableOpacity style={styles.membershipBanner}>
+        <TouchableOpacity
+          style={styles.membershipBanner}
+          onPress={() =>
+            showBottomSheet(
+              "Membership Feature",
+              "Premium membership features will be added soon! You'll get exclusive perks, priority matching, and more.",
+              [
+                {
+                  text: "OK",
+                  style: "confirm",
+                }
+              ]
+            )
+          }
+        >
           <View style={styles.membershipIcon}>
             <View style={styles.membershipIconInner} />
           </View>
+
           <View style={styles.membershipText}>
             <Text style={styles.membershipTitle}>Upgrade Membership Now!</Text>
             <Text style={styles.membershipSubtitle}>Get exclusive features and benefits</Text>
           </View>
+
           <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
         </TouchableOpacity>
+
 
         {/* Settings Options */}
         <View style={styles.settingsList}>
           {settingsOptions.map((option, index) => (
-            <TouchableOpacity key={index} style={styles.settingItem}>
+            <TouchableOpacity
+              key={index}
+              style={styles.settingItem}
+              onPress={() =>
+                showBottomSheet(
+                  "Feature Not Available",
+                  `"${option.label}" is coming soon. Stay tuned for updates!`,
+                  [
+                    {
+                      text: "OK",
+                      style: "confirm",
+                    }
+                  ]
+                )
+              }
+            >
               <Ionicons name={option.icon} size={24} color="#FFFFFF" style={styles.settingIcon} />
               <Text style={styles.settingLabel}>{option.label}</Text>
               <Ionicons name="chevron-forward" size={20} color="#999999" />

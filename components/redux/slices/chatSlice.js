@@ -137,6 +137,22 @@ export const unmatchUser = createAsyncThunk(
   'chat/unmatchUser',
   async ({ roomId, userId, matchedUserId }, { rejectWithValue }) => {
     try {
+      // Delete all messages in the room
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('room_id', roomId)
+
+      if (messagesError) throw messagesError
+
+      // Delete typing indicators
+      const { error: typingError } = await supabase
+        .from('typing_indicators')
+        .delete()
+        .eq('room_id', roomId)
+
+      if (typingError) throw typingError
+
       // Delete the chat room
       const { error: roomError } = await supabase
         .from('chat_rooms')
@@ -159,22 +175,6 @@ export const unmatchUser = createAsyncThunk(
         .eq('matched_user_id', userId)
 
       if (matchError1 || matchError2) throw matchError1 || matchError2
-
-      // Delete all messages in the room
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .eq('room_id', roomId)
-
-      if (messagesError) throw messagesError
-
-      // Delete typing indicators
-      const { error: typingError } = await supabase
-        .from('typing_indicators')
-        .delete()
-        .eq('room_id', roomId)
-
-      if (typingError) throw typingError
 
       return { roomId }
     } catch (error) {

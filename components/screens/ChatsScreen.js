@@ -455,7 +455,11 @@ export default function ChatsScreen() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.logoIcon}>
-            <Ionicons name="chatbubble-ellipses" size={24} color="#FF6B6B" />
+            <Image
+              source={require('../../assets/iconf.png')}
+              style={styles.appIcon}
+              resizeMode="contain"
+            />
             <Ionicons name="heart" size={12} color="#E74C3C" style={styles.heartIcon} />
           </View>
           <Text style={styles.headerTitle}>Chats</Text>
@@ -470,7 +474,7 @@ export default function ChatsScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      {/* <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Now Active Section */}
         {activeUsers.length > 0 && (
           <View style={styles.activeSection}>
@@ -491,17 +495,18 @@ export default function ChatsScreen() {
         )}
 
         {/* Chat List */}
-        
-      </ScrollView>
-      <FlatList
-          data={chatRooms}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderChatItem}
-          contentContainerStyle={styles.list}
-          onRefresh={() => user && dispatch(fetchChatRooms(user.id))}
-          refreshing={loading}
-          scrollEnabled={false}
-        />
+        <FlatList
+        data={chatRooms}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderChatItem}
+        contentContainerStyle={styles.list}
+        onRefresh={() => user && dispatch(fetchChatRooms(user.id))}
+        refreshing={loading}
+        scrollEnabled={false}
+      />
+
+      {/* </ScrollView> */} 
+      
     </View>
   )
 }
@@ -510,7 +515,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1A1A1A',
-    
+
+
 
   },
   header: {
@@ -681,6 +687,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 10,
+  },
+  appIcon: {
+    width: 30,
+    height: 30,
+    resizeMode: 'center',
   },
   emptyText: {
     fontSize: 16,

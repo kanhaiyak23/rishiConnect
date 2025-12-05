@@ -12,7 +12,7 @@ import {
   ScrollView
 } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchPotentialMatches, swipeUser, clearRecentMatch, nextCardOptimistic } from '../redux/slices/discoverySlice'
+import { fetchPotentialMatches, swipeUser, clearRecentMatch, nextCardOptimistic, refreshDiscovery } from '../redux/slices/discoverySlice'
 import { useFocusEffect } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import { BlurView } from 'expo-blur'
@@ -103,10 +103,16 @@ export default function DiscoveryScreen({ navigation }) {
   };
 
 
-  const handleUndo = () => {
-    // TODO: Implement undo functionality
-    showBottomSheet('Info', 'Undo feature coming soon')
-  }
+  // const handleRefresh = () => {
+  //   if (loading) return
+
+  //   // Dispatch refresh action
+  //   dispatch(refreshDiscovery({
+  //     userId: user.id,
+  //     currentMatches: potentialMatches,
+  //     currentIndex
+  //   }))
+  // }
 
   const handleReject = () => {
     handleSwipe('left')
@@ -237,13 +243,13 @@ export default function DiscoveryScreen({ navigation }) {
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[styles.actionButton, styles.undoButton]}
-          onPress={handleUndo}
+          onPress={handleRefresh}
           disabled={!currentProfile}
         >
           <Ionicons name="refresh" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity
           style={[styles.actionButton, styles.rejectButton]}
