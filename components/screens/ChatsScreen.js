@@ -13,6 +13,8 @@ import { fetchChatRooms, setCurrentRoom, updateChatRoomLastMessage } from '../re
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { supabase } from '../lib/supabase'
 import { Ionicons } from '@expo/vector-icons'
+import AuroraBackground from '../ui/AuroraBackground'
+import FadeInUp from '../ui/FadeInUp'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -101,7 +103,7 @@ const ActiveUserAvatar = ({ activeUser, isOnline, onPress }) => {
     >
       <View style={styles.activeUserAvatarContainer}>
         <Image
-          source={{ uri: activeUser?.photo_url || 'https://placehold.co/60/2A2A2A/FF6B6B?text=No+Photo' }}
+          source={{ uri: activeUser?.photo_url || 'https://placehold.co/60/161622/FF5E7E?text=No+Photo' }}
           style={[
             styles.activeUserAvatar,
             !isOnline && styles.inactiveUserAvatar
@@ -377,11 +379,12 @@ export default function ChatsScreen() {
   )
   // console.log('chatRooms', chatRooms)
   //   console.log('Online users from Supabase:', Array.from(onlineUserIds))
-  const renderChatItem = useCallback(({ item }) => {
+  const renderChatItem = useCallback(({ item, index }) => {
     const otherUser = user.id === item.user1_id ? item.user2 : item.user1
     const unreadCount = unreadCounts[item.id] || 0
 
     return (
+      <FadeInUp delay={Math.min(index, 8) * 70} distance={30}>
       <TouchableOpacity
         style={styles.chatItem}
         onPress={() => {
@@ -395,7 +398,7 @@ export default function ChatsScreen() {
         }}
       >
         <Image
-          source={{ uri: otherUser?.photo_url || 'https://placehold.co/60/2A2A2A/FF6B6B?text=No+Photo' }}
+          source={{ uri: otherUser?.photo_url || 'https://placehold.co/60/161622/FF5E7E?text=No+Photo' }}
           style={styles.avatar}
         />
         <View style={styles.chatInfo}>
@@ -415,6 +418,7 @@ export default function ChatsScreen() {
           )}
         </View>
       </TouchableOpacity>
+      </FadeInUp>
     )
   }, [user, dispatch, navigation, unreadCounts])
 
@@ -451,8 +455,8 @@ export default function ChatsScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <AuroraBackground>
+      <FadeInUp style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.logoIcon}>
             <Image
@@ -472,7 +476,7 @@ export default function ChatsScreen() {
             <Ionicons name="ellipsis-vertical-outline" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-      </View>
+      </FadeInUp>
 
       {/* <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Now Active Section */}
@@ -502,19 +506,19 @@ export default function ChatsScreen() {
         contentContainerStyle={styles.list}
         onRefresh={() => user && dispatch(fetchChatRooms(user.id))}
         refreshing={loading}
-        scrollEnabled={false}
+        showsVerticalScrollIndicator={false}
       />
 
       {/* </ScrollView> */} 
       
-    </View>
+    </AuroraBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#0B0B12',
 
 
 
@@ -526,7 +530,7 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingHorizontal: 20,
     paddingBottom: 10,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#0B0B12',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -573,7 +577,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 14,
-    color: '#FF6B6B',
+    color: '#FF5E7E',
     fontWeight: '600',
   },
   activeUsersList: {
@@ -591,7 +595,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     borderWidth: 2,
-    borderColor: '#333333',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   inactiveUserAvatar: {
     opacity: 0.6,
@@ -603,7 +607,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
     opacity: 0.4,
   },
   activeIndicator: {
@@ -613,9 +617,9 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
     borderWidth: 2,
-    borderColor: '#1A1A1A',
+    borderColor: '#0B0B12',
     zIndex: 1,
   },
   inactiveIndicator: {
@@ -631,14 +635,14 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 30,
     marginRight: 16,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#161622',
   },
   chatInfo: {
     flex: 1,
@@ -662,7 +666,7 @@ const styles = StyleSheet.create({
     color: '#999999',
   },
   unreadBadge: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
     borderRadius: 12,
     minWidth: 24,
     height: 24,
@@ -680,7 +684,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#0B0B12',
   },
   emptyTitle: {
     fontSize: 24,

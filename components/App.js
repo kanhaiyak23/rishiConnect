@@ -34,7 +34,8 @@ import EditProfileScreen from './screens/EditProfileScreen'
 
 const Tab = createBottomTabNavigator()
 
-import { View, Button, Text, TouchableOpacity } from 'react-native';
+import { View, Button, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { supabase } from './lib/supabase';
@@ -64,12 +65,15 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#FF6B6B',
-        tabBarInactiveTintColor: '#999999',
+        tabBarActiveTintColor: '#FF5E7E',
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.45)',
+        tabBarBackground: () => (
+          <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+        ),
         tabBarStyle: {
-          backgroundColor: '#1A1A1A',
+          backgroundColor: '#0B0B12',
           borderTopWidth: 1,
-          borderTopColor: '#333333',
+          borderTopColor: 'rgba(255,255,255,0.1)',
           paddingBottom: 8,
           height: 65,
         },

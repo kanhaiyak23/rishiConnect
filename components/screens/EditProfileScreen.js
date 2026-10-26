@@ -7,6 +7,8 @@ import { updateProfile, fetchProfile } from '../redux/slices/profileSlice'
 import { supabase } from '../lib/supabase'
 import { Ionicons } from '@expo/vector-icons'
 import { useBottomSheet } from '../../context/BottomSheetContext'
+import AuroraBackground from '../ui/AuroraBackground'
+import FadeInUp from '../ui/FadeInUp'
 
 export default function EditProfileScreen({ navigation }) {
   const dispatch = useDispatch()
@@ -112,10 +114,10 @@ export default function EditProfileScreen({ navigation }) {
     }
   }
 
-  const currentPhotoUri = photo?.uri || profile?.photo_url || 'https://placehold.co/150/2A2A2A/FF6B6B?text=No+Photo'
+  const currentPhotoUri = photo?.uri || profile?.photo_url || 'https://placehold.co/150/161622/FF5E7E?text=No+Photo'
 
   return (
-    <View style={styles.container}>
+    <AuroraBackground>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -127,6 +129,7 @@ export default function EditProfileScreen({ navigation }) {
         <View style={styles.headerRight} />
       </View>
 
+      <FadeInUp delay={150} distance={30} style={{ flex: 1 }}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
           <Image source={{ uri: currentPhotoUri }} style={styles.photo} />
@@ -217,14 +220,15 @@ export default function EditProfileScreen({ navigation }) {
           <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+      </FadeInUp>
+    </AuroraBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#0B0B12',
   },
   header: {
     flexDirection: 'row',
@@ -233,9 +237,9 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingHorizontal: 20,
     paddingBottom: 10,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'transparent',
     borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   backButton: {
     padding: 4,
@@ -259,13 +263,13 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#161622',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
     marginBottom: 32,
     borderWidth: 2,
-    borderColor: '#333333',
+    borderColor: 'rgba(255,255,255,0.1)',
     position: 'relative',
     overflow: 'hidden',
   },
@@ -304,26 +308,26 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#161622',
     padding: 16,
     borderRadius: 12,
     fontSize: 16,
     color: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   textArea: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#161622',
     padding: 16,
     borderRadius: 12,
     fontSize: 16,
     color: '#FFFFFF',
     height: 120,
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   saveButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
     padding: 18,
     borderRadius: 12,
     alignItems: 'center',
@@ -339,12 +343,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   cancelButton: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#161622',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: 'rgba(255,255,255,0.1)',
     marginBottom: 32,
   },
   cancelButtonText: {

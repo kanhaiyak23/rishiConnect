@@ -60,7 +60,7 @@ export const signUp = createAsyncThunk(
 
 export const signInWithGoogle = createAsyncThunk(
   'auth/signInWithGoogle',
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch, rejectWithValue }) => {
     try {
       const redirectTo = 'rishiconnect://auth/callback'; // deep link configured in app.json
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -76,6 +76,36 @@ export const signInWithGoogle = createAsyncThunk(
       if (data?.url) {
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
         console.log('OAuth result:', result);
+
+        // openAuthSessionAsync hands back the redirect URL directly (iOS, and Android
+        // when the browser tab closes), so the session has to be restored from it here.
+        if (result.type === 'success' && result.url) {
+          const url = result.url;
+          const params = new URLSearchParams(url.split('#')[1] || '');
+          const query = new URLSearchParams((url.split('#')[0].split('?')[1]) || '');
+          const access_token = params.get('access_token');
+          const refresh_token = params.get('refresh_token');
+          const code = query.get('code');
+          const oauthError = params.get('error_description') || query.get('error_description');
+
+          if (oauthError) throw new Error(oauthError);
+
+          let session = null;
+          if (access_token && refresh_token) {
+            const res = await supabase.auth.setSession({ access_token, refresh_token });
+            if (res.error) throw res.error;
+            session = res.data.session;
+          } else if (code) {
+            const res = await supabase.auth.exchangeCodeForSession(code);
+            if (res.error) throw res.error;
+            session = res.data.session;
+          }
+
+          if (session) {
+            dispatch(setSession(session));
+            dispatch(fetchProfile(session.user.id));
+          }
+        }
       }
 
       return { success: true };

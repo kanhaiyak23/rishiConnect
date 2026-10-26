@@ -15,6 +15,27 @@ import { fetchMessages, sendMessage, addMessage, updateMessageStatus, unmatchUse
 import { supabase } from '../lib/supabase'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated'
+
+function Bubble({ mine, style, children }) {
+  const p = useSharedValue(0)
+  useEffect(() => {
+    p.value = withSpring(1, { damping: 14, stiffness: 160 })
+  }, [])
+  const anim = useAnimatedStyle(() => ({
+    opacity: Math.min(1, p.value * 1.5),
+    transform: [
+      { translateX: (1 - p.value) * (mine ? 30 : -30) },
+      { scale: 0.85 + p.value * 0.15 },
+    ],
+  }))
+  return <Animated.View style={[style, anim]}>{children}</Animated.View>
+}
 
 export default function ChatScreen({ route }) {
   const navigation = useNavigation()
@@ -150,7 +171,8 @@ export default function ChatScreen({ route }) {
           </View>
         )}
 
-        <View
+        <Bubble
+          mine={isMyMessage}
           style={[
             styles.messageContainer,
             isMyMessage ? styles.myMessage : styles.otherMessage
@@ -174,7 +196,7 @@ export default function ChatScreen({ route }) {
               <Ionicons name="checkmark" size={14} color="#fff" />
             )}
           </View>
-        </View>
+        </Bubble>
       </>
     )
   }
@@ -245,7 +267,7 @@ export default function ChatScreen({ route }) {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#1A1A1A',
+      backgroundColor: '#0B0B12',
     },
     header: {
       flexDirection: 'row',
@@ -254,9 +276,9 @@ export default function ChatScreen({ route }) {
       paddingTop: 20,
       paddingHorizontal: 20,
       paddingBottom: 10,
-      backgroundColor: '#1A1A1A',
+      backgroundColor: '#0B0B12',
       borderBottomWidth: 1,
-      borderBottomColor: '#333333',
+      borderBottomColor: 'rgba(255,255,255,0.1)',
     },
     backButton: {
       padding: 4,
@@ -287,7 +309,7 @@ export default function ChatScreen({ route }) {
       marginVertical: 16,
     },
     dateSeparatorText: {
-      backgroundColor: '#2A2A2A',
+      backgroundColor: '#161622',
       color: '#FFFFFF',
       fontSize: 12,
       paddingHorizontal: 12,
@@ -303,12 +325,12 @@ export default function ChatScreen({ route }) {
     },
     myMessage: {
       alignSelf: 'flex-end',
-      backgroundColor: '#FF6B6B',
+      backgroundColor: '#FF5E7E',
       borderBottomRightRadius: 4,
     },
     otherMessage: {
       alignSelf: 'flex-start',
-      backgroundColor: '#2A2A2A',
+      backgroundColor: '#161622',
       borderBottomLeftRadius: 4,
     },
     messageText: {
@@ -344,9 +366,9 @@ export default function ChatScreen({ route }) {
       flexDirection: 'row',
       padding: 12,
       paddingHorizontal: 16,
-      backgroundColor: '#1A1A1A',
+      backgroundColor: '#0B0B12',
       borderTopWidth: 1,
-      borderTopColor: '#333333',
+      borderTopColor: 'rgba(255,255,255,0.1)',
       alignItems: 'center',
       gap: 12,
     },
@@ -354,13 +376,13 @@ export default function ChatScreen({ route }) {
       width: 40,
       height: 40,
       borderRadius: 12,
-      backgroundColor: '#2A2A2A',
+      backgroundColor: '#161622',
       justifyContent: 'center',
       alignItems: 'center',
     },
     input: {
       flex: 1,
-      backgroundColor: '#2A2A2A',
+      backgroundColor: '#161622',
       borderRadius: 20,
       paddingHorizontal: 16,
       paddingVertical: 12,
@@ -373,7 +395,7 @@ export default function ChatScreen({ route }) {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: '#2A2A2A',
+      backgroundColor: '#161622',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -381,7 +403,7 @@ export default function ChatScreen({ route }) {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: '#FF6B6B',
+      backgroundColor: '#FF5E7E',
       justifyContent: 'center',
       alignItems: 'center',
     },

@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     container: {
-        backgroundColor: '#2A2A2A',
+        backgroundColor: '#161622',
         borderRadius: 20,
         padding: 24,
         width: '100%',
@@ -125,10 +125,10 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     confirmButton: {
-        backgroundColor: '#FF6B6B',
+        backgroundColor: '#FF5E7E',
     },
     cancelButton: {
-        backgroundColor: '#333333',
+        backgroundColor: 'rgba(255,255,255,0.1)',
         borderWidth: 1,
         borderColor: '#444',
     },

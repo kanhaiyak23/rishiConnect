@@ -12,6 +12,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { signIn, signInWithGoogle } from '../redux/slices/authSlice'
 import { Ionicons } from '@expo/vector-icons'
 import { useBottomSheet } from '../../context/BottomSheetContext'
+import AuroraBackground from '../ui/AuroraBackground'
+import FadeInUp from '../ui/FadeInUp'
+import GlassInput from '../ui/GlassInput'
+import GradientButton from '../ui/GradientButton'
+import { theme } from '../ui/theme'
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
@@ -89,237 +94,84 @@ export default function LoginScreen({ navigation }) {
     }
   }
 
-  const titleOpacity = useSharedValue(0)
-  const titleScale = useSharedValue(0.9)
-  const formOpacity = useSharedValue(0)
-  const buttonOpacity = useSharedValue(0)
-  const buttonScale = useSharedValue(0.9)
-
-  useEffect(() => {
-    titleOpacity.value = withDelay(100, withTiming(1, { duration: 400 }))
-    titleScale.value = withDelay(100, withSpring(1, { damping: 10, stiffness: 100 }))
-    formOpacity.value = withDelay(200, withTiming(1, { duration: 400 }))
-    buttonOpacity.value = withDelay(300, withTiming(1, { duration: 400 }))
-    buttonScale.value = withDelay(300, withSpring(1, { damping: 10, stiffness: 100 }))
-  }, [])
-
-  const titleStyle = useAnimatedStyle(() => ({
-    opacity: titleOpacity.value,
-    transform: [{ scale: titleScale.value }],
-  }))
-
-  const formStyle = useAnimatedStyle(() => ({ opacity: formOpacity.value }))
-  const buttonStyle = useAnimatedStyle(() => ({
-  opacity: buttonOpacity.value,
-  transform: [{ scale: buttonScale.value }],
-}), []);// 👈 ADD EMPTY DEP ARRAY
-
-
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+    <AuroraBackground>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
       </TouchableOpacity>
 
       <View style={styles.content}>
-        <Animated.Text style={[styles.title, titleStyle]}>
-          Welcome back 👋
-        </Animated.Text>
-        <Animated.Text style={[styles.subtitle, formStyle]}>
-          Please enter your email & password to sign in.
-        </Animated.Text>
+        <FadeInUp delay={100}>
+          <Text style={styles.title}>Welcome back 👋</Text>
+          <Text style={styles.subtitle}>Sign in to pick up where you left off.</Text>
+        </FadeInUp>
 
-        <Animated.View style={formStyle}>
-          <Text style={styles.label}>Email</Text>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#999999" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholderTextColor="#666666"
-            />
-          </View>
-        </Animated.View>
+        <FadeInUp delay={250}>
+          <GlassInput
+            icon="mail-outline"
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </FadeInUp>
 
-        <Animated.View style={formStyle}>
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#999999" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              placeholderTextColor="#666666"
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeIcon}
-            >
-              <Ionicons
-                name={showPassword ? "eye-outline" : "eye-off-outline"}
-                size={20}
-                color="#999999"
-              />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
+        <FadeInUp delay={350}>
+          <GlassInput
+            icon="lock-closed-outline"
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secure
+          />
+        </FadeInUp>
 
-        <Animated.View style={[styles.optionsContainer, formStyle]}>
-          
+        <FadeInUp delay={420} style={styles.forgotRow}>
           <TouchableOpacity
             onPress={() => showBottomSheet('Info', 'Forgot password functionality coming soon')}
           >
             <Text style={styles.forgotPasswordText}>Forgot password?</Text>
           </TouchableOpacity>
-        </Animated.View>
+        </FadeInUp>
 
-        <AnimatedTouchable
-          style={[styles.loginButton, buttonStyle]}
-          onPress={handleLogin}
-          disabled={loading}
-          // activeOpacity={0.85}
-        >
-          <Text style={styles.loginButtonText}>
-            {loading ? 'Logging in...' : 'Log in'}
-          </Text>
-        </AnimatedTouchable>
+        <FadeInUp delay={500}>
+          <GradientButton title="Log in" onPress={handleLogin} loading={loading} />
+        </FadeInUp>
 
-        <TouchableOpacity
-          onPress={() => navigation.navigate('SignUp')}
-          style={styles.signUpLink}
-        >
-          <Text style={styles.signUpText}>
-            Don't have an account? <Text style={styles.signUpLinkText}>Sign up</Text>
-          </Text>
-        </TouchableOpacity>
+        <FadeInUp delay={600}>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')} style={styles.signUpLink}>
+            <Text style={styles.signUpText}>
+              Don't have an account? <Text style={styles.signUpLinkText}>Sign up</Text>
+            </Text>
+          </TouchableOpacity>
+        </FadeInUp>
       </View>
-    </View>
+    </AuroraBackground>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1A1A1A',
-  },
   backButton: {
     position: 'absolute',
     top: 60,
     left: 20,
     zIndex: 10,
-    padding: 8,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 30,
-    paddingTop: 100,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginBottom: 40,
-    fontWeight: '400',
-    opacity: 0.8,
-  },
-  label: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  inputContainer: {
-    flexDirection: 'row',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
-    backgroundColor: '#2A2A2A',
-    borderRadius: 12,
+    justifyContent: 'center',
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: '#333333',
-    marginBottom: 20,
-    paddingHorizontal: 16,
-    height: 56,
+    borderColor: theme.surfaceBorder,
   },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: '#FFFFFF',
-    paddingVertical: 0,
-  },
-  eyeIcon: {
-    padding: 4,
-  },
-  optionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#FF6B6B',
-    marginRight: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: '#FF6B6B',
-  },
-  checkboxLabel: {
-    fontSize: 14,
-    color: '#FFFFFF',
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: '#FF6B6B',
-    fontWeight: '500',
-  },
-  loginButton: {
-    backgroundColor: '#FF6B6B',
-    borderRadius: 12,
-    paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  loginButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  signUpLink: {
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  signUpText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  signUpLinkText: {
-    color: '#FF6B6B',
-    fontWeight: '600',
-  },
+  content: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 130 },
+  title: { fontSize: 34, fontWeight: '800', color: theme.text, marginBottom: 8 },
+  subtitle: { fontSize: 16, color: theme.textMuted, marginBottom: 36, lineHeight: 22 },
+  forgotRow: { alignItems: 'flex-end', marginBottom: 24, marginTop: -4 },
+  forgotPasswordText: { fontSize: 14, color: theme.primary, fontWeight: '600' },
+  signUpLink: { alignItems: 'center', marginTop: 24 },
+  signUpText: { fontSize: 15, color: theme.textMuted },
+  signUpLinkText: { color: theme.primary, fontWeight: '700' },
 })

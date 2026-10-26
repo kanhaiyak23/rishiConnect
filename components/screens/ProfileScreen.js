@@ -10,6 +10,8 @@ import {
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchProfile } from '../redux/slices/profileSlice'
 import { Ionicons } from '@expo/vector-icons'
+import AuroraBackground from '../ui/AuroraBackground'
+import FadeInUp from '../ui/FadeInUp'
 
 export default function ProfileScreen({ navigation }) {
   const dispatch = useDispatch()
@@ -23,8 +25,8 @@ export default function ProfileScreen({ navigation }) {
   }, [user, dispatch])
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <AuroraBackground>
+      <FadeInUp style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.logoIcon}>
              <Image
@@ -44,21 +46,21 @@ export default function ProfileScreen({ navigation }) {
             <Ionicons name="settings-outline" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-      </View>
+      </FadeInUp>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Picture Section */}
-        <View style={styles.profilePictureSection}>
+        <FadeInUp delay={150} distance={40} style={styles.profilePictureSection}>
           {/* Image indicators */}
           
           <Image
-            source={{ uri: profile?.photo_url || 'https://placehold.co/400/2A2A2A/FF6B6B?text=No+Photo' }}
+            source={{ uri: profile?.photo_url || 'https://placehold.co/400/161622/FF5E7E?text=No+Photo' }}
             style={styles.profileImage}
           />
-        </View>
+        </FadeInUp>
 
         {/* Profile Details Section */}
-        <View style={styles.profileDetailsSection}>
+        <FadeInUp delay={300} style={styles.profileDetailsSection}>
           <View style={styles.profileDetailsLeft}>
             <Text style={styles.profileName}>
               {profile?.name || user?.email?.split('@')[0] || 'User'}
@@ -103,16 +105,16 @@ export default function ProfileScreen({ navigation }) {
           >
             <Ionicons name="pencil" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-        </View>
+        </FadeInUp>
       </ScrollView>
-    </View>
+    </AuroraBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#0B0B12',
   },
   header: {
     flexDirection: 'row',
@@ -121,7 +123,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 10,
-    backgroundColor: '#1A1A1A',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
   upgradeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
@@ -176,9 +177,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 10,
     marginBottom: 24,
-    borderRadius: 20,
+    borderRadius: 32,
     overflow: 'hidden',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#161622',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   imageIndicators: {
     position: 'absolute',
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
   indicatorActive: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
     width: 20,
   },
   profileImage: {
@@ -243,12 +246,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   interestTag: {
-    backgroundColor: 'rgba(255, 107, 107, 0.2)',
+    backgroundColor: 'rgba(255, 94, 126, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FF6B6B',
+    borderColor: '#FF5E7E',
   },
   interestText: {
     color: '#FFFFFF',
@@ -259,11 +262,11 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 16,
-    shadowColor: '#FF6B6B',
+    shadowColor: '#FF5E7E',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

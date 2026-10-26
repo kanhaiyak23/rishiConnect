@@ -13,6 +13,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { signUp, signInWithGoogle } from '../redux/slices/authSlice'
 import { Ionicons } from '@expo/vector-icons'
 import { useBottomSheet } from '../../context/BottomSheetContext'
+import AuroraBackground from '../ui/AuroraBackground'
+import FadeInUp from '../ui/FadeInUp'
+import GlassInput from '../ui/GlassInput'
+import GradientButton from '../ui/GradientButton'
+import { theme } from '../ui/theme'
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
@@ -97,250 +102,78 @@ export default function SignUpScreen({ navigation }) {
     }
   }
 
-  const titleOpacity = useSharedValue(0)
-  const titleScale = useSharedValue(0.9)
-  const formOpacity = useSharedValue(0)
-  const buttonOpacity = useSharedValue(0)
-  const buttonScale = useSharedValue(0.9)
-
-  useEffect(() => {
-    titleOpacity.value = withDelay(100, withTiming(1, { duration: 400 }))
-    titleScale.value = withDelay(100, withSpring(1, { damping: 10, stiffness: 100 }))
-    formOpacity.value = withDelay(200, withTiming(1, { duration: 400 }))
-    buttonOpacity.value = withDelay(300, withTiming(1, { duration: 400 }))
-    buttonScale.value = withDelay(300, withSpring(1, { damping: 10, stiffness: 100 }))
-  }, [])
-
-  const titleStyle = useAnimatedStyle(() => ({
-    opacity: titleOpacity.value,
-    transform: [{ scale: titleScale.value }],
-  }))
-
-  const formStyle = useAnimatedStyle(() => ({ opacity: formOpacity.value }))
-  const buttonStyle = useAnimatedStyle(() => ({
-  opacity: buttonOpacity.value,
-  transform: [{ scale: buttonScale.value }],
-}), []); // 👈 ADD EMPTY DEP ARRAY
-
-//  
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+    <AuroraBackground>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
       </TouchableOpacity>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.Text style={[styles.title, titleStyle]}>
-          Create an account 👋
-        </Animated.Text>
-        <Animated.Text style={[styles.subtitle, formStyle]}>
-          Create your account in seconds. We'll help you find your perfect match.
-        </Animated.Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <FadeInUp delay={100}>
+          <Text style={styles.title}>Create an account ✨</Text>
+          <Text style={styles.subtitle}>
+            Create your account in seconds. We'll help you find your perfect match.
+          </Text>
+        </FadeInUp>
 
-        <Animated.View style={formStyle}>
-          <Text style={styles.label}>Email</Text>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#999999" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholderTextColor="#666666"
-            />
-          </View>
-        </Animated.View>
+        <FadeInUp delay={250}>
+          <GlassInput
+            icon="mail-outline"
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </FadeInUp>
 
-        <Animated.View style={formStyle}>
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#999999" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              placeholderTextColor="#666666"
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeIcon}
-            >
-              <Ionicons
-                name={showPassword ? "eye-outline" : "eye-off-outline"}
-                size={20}
-                color="#999999"
-              />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
+        <FadeInUp delay={350}>
+          <GlassInput
+            icon="lock-closed-outline"
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secure
+          />
+        </FadeInUp>
 
-        {/* <Animated.View style={[styles.privacyContainer, formStyle]}>
-          <TouchableOpacity
-            style={styles.checkboxContainer}
-            onPress={() => setAgreeToPrivacy(!agreeToPrivacy)}
-          >
-            <View style={[styles.checkbox, agreeToPrivacy && styles.checkboxChecked]}>
-              {agreeToPrivacy && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-            </View>
-            <Text style={styles.privacyText}>
-              I agree to RishiConnect <Text style={styles.privacyLink}>Privacy Policy.</Text>
+        <FadeInUp delay={450} style={{ marginTop: 12 }}>
+          <GradientButton title="Sign up" onPress={handleSignUp} loading={loading} />
+        </FadeInUp>
+
+        <FadeInUp delay={550}>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.signUpLink}>
+            <Text style={styles.signUpText}>
+              Already have an account? <Text style={styles.signUpLinkText}>Sign in</Text>
             </Text>
           </TouchableOpacity>
-        </Animated.View> */}
-
-        <AnimatedTouchable
-          style={[styles.signUpButton, buttonStyle]}
-          onPress={handleSignUp}
-          disabled={loading}
-        //  activeOpacity={agreeToPrivacy ? 0.85 : 0}
-        >
-          <Text style={styles.signUpButtonText}>
-            {loading ? 'Creating Account...' : 'Sign up'}
-          </Text>
-        </AnimatedTouchable>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Login')}
-          style={styles.signInLink}
-        >
-          <Text style={styles.signInText}>
-            Already have an account? <Text style={styles.signInLinkText}>Sign in</Text>
-          </Text>
-        </TouchableOpacity>
+        </FadeInUp>
       </ScrollView>
-    </View>
+    </AuroraBackground>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1A1A1A',
-  },
   backButton: {
     position: 'absolute',
     top: 60,
     left: 20,
     zIndex: 10,
-    padding: 8,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 30,
-    paddingTop: 100,
-    paddingBottom: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginBottom: 40,
-    fontWeight: '400',
-    opacity: 0.8,
-  },
-  label: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  inputContainer: {
-    flexDirection: 'row',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
-    backgroundColor: '#2A2A2A',
-    borderRadius: 12,
+    justifyContent: 'center',
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderColor: '#333333',
-    marginBottom: 20,
-    paddingHorizontal: 16,
-    height: 56,
+    borderColor: theme.surfaceBorder,
   },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: '#FFFFFF',
-    paddingVertical: 0,
-  },
-  eyeIcon: {
-    padding: 4,
-  },
-  privacyContainer: {
-    marginBottom: 30,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#FF6B6B',
-    marginRight: 12,
-    marginTop: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: '#FF6B6B',
-  },
-  privacyText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#FFFFFF',
-    lineHeight: 22,
-  },
-  privacyLink: {
-    color: '#FF6B6B',
-    textDecorationLine: 'underline',
-  },
-  signUpButton: {
-    backgroundColor: '#FF6B6B',
-    borderRadius: 12,
-    paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-    opacity: 1,
-  },
-  signUpButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  signInLink: {
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  signInText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  signInLinkText: {
-    color: '#FF6B6B',
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
+  content: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 130 },
+  title: { fontSize: 34, fontWeight: '800', color: theme.text, marginBottom: 8 },
+  subtitle: { fontSize: 16, color: theme.textMuted, marginBottom: 36, lineHeight: 22 },
+  forgotRow: { alignItems: 'flex-end', marginBottom: 24, marginTop: -4 },
+  forgotPasswordText: { fontSize: 14, color: theme.primary, fontWeight: '600' },
+  signUpLink: { alignItems: 'center', marginTop: 24 },
+  signUpText: { fontSize: 15, color: theme.textMuted },
+  signUpLinkText: { color: theme.primary, fontWeight: '700' },
 })

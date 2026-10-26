@@ -11,6 +11,8 @@ import { useDispatch } from 'react-redux'
 import { signOut } from '../redux/slices/authSlice'
 import { Ionicons } from '@expo/vector-icons'
 import { useBottomSheet } from '../../context/BottomSheetContext'
+import AuroraBackground from '../ui/AuroraBackground'
+import FadeInUp from '../ui/FadeInUp'
 
 export default function SettingsScreen({ navigation }) {
   const dispatch = useDispatch()
@@ -36,7 +38,7 @@ export default function SettingsScreen({ navigation }) {
   ]
 
   return (
-    <View style={styles.container}>
+    <AuroraBackground>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -48,6 +50,7 @@ export default function SettingsScreen({ navigation }) {
         <View style={styles.headerRight} />
       </View>
 
+      <FadeInUp delay={150} distance={30} style={{ flex: 1 }}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Membership Banner */}
         <TouchableOpacity
@@ -109,11 +112,12 @@ export default function SettingsScreen({ navigation }) {
           style={styles.logoutButton}
           onPress={() => setShowLogoutModal(true)}
         >
-          <Ionicons name="log-out-outline" size={24} color="#FF6B6B" style={styles.logoutIcon} />
+          <Ionicons name="log-out-outline" size={24} color="#FF5E7E" style={styles.logoutIcon} />
           <Text style={styles.logoutButtonText}>Logout</Text>
           <View style={styles.logoutSpacer} />
         </TouchableOpacity>
       </ScrollView>
+      </FadeInUp>
 
       {/* Logout Confirmation Modal */}
       <Modal
@@ -145,14 +149,14 @@ export default function SettingsScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-    </View>
+    </AuroraBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#0B0B12',
   },
   header: {
     flexDirection: 'row',
@@ -161,9 +165,9 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingHorizontal: 20,
     paddingBottom: 10,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'transparent',
     borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   backButton: {
     padding: 4,
@@ -186,7 +190,7 @@ const styles = StyleSheet.create({
   membershipBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
@@ -228,7 +232,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
     gap: 16,
   },
   settingIcon: {
@@ -253,7 +257,7 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     flex: 1,
     fontSize: 16,
-    color: '#FF6B6B',
+    color: '#FF5E7E',
     fontWeight: '600',
   },
   logoutSpacer: {
@@ -265,7 +269,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   logoutModal: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#161622',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
@@ -291,7 +295,7 @@ const styles = StyleSheet.create({
   },
   logoutCancelButton: {
     flex: 1,
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -303,7 +307,7 @@ const styles = StyleSheet.create({
   },
   logoutConfirmButton: {
     flex: 1,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',

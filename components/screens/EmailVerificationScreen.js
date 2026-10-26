@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useDispatch } from 'react-redux'
 import { supabase } from '../lib/supabase'
 import { useBottomSheet } from '../../context/BottomSheetContext'
+import AuroraBackground from '../ui/AuroraBackground'
 
 export default function EmailVerificationScreen({ navigation, route }) {
   const dispatch = useDispatch()
@@ -63,7 +64,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
   }
 
   return (
-    <View style={styles.container}>
+    <AuroraBackground>
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate('Login')}
@@ -92,7 +93,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
             disabled={resending}
           >
             {resending ? (
-              <ActivityIndicator size="small" color="#FF6B6B" />
+              <ActivityIndicator size="small" color="#FF5E7E" />
             ) : (
               <Text style={styles.resendText}>Resend email</Text>
             )}
@@ -106,14 +107,14 @@ export default function EmailVerificationScreen({ navigation, route }) {
           </TouchableOpacity>
         </Animated.View>
       </View>
-    </View>
+    </AuroraBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#0B0B12',
   },
   backButton: {
     position: 'absolute',
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#161622',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -172,7 +173,7 @@ const styles = StyleSheet.create({
   },
   resendText: {
     fontSize: 16,
-    color: '#FF6B6B',
+    color: '#FF5E7E',
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#FF6B6B',
+    borderColor: '#FF5E7E',
     borderRadius: 12,
     paddingVertical: 18,
     alignItems: 'center',

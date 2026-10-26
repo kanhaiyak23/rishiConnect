@@ -17,6 +17,7 @@ import { supabase } from '../lib/supabase'
 import { Ionicons } from '@expo/vector-icons'
 import { decode } from 'base64-arraybuffer'
 import { useBottomSheet } from '../../context/BottomSheetContext'
+import AuroraBackground from '../ui/AuroraBackground'
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity)
 
@@ -165,7 +166,7 @@ export default function ProfileSetupScreen({ navigation, route }) {
   const contentStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }))
 
   return (
-    <View style={styles.container}>
+    <AuroraBackground>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -182,7 +183,7 @@ export default function ProfileSetupScreen({ navigation, route }) {
                   <Image source={{ uri: photo.uri }} style={styles.photo} />
                 ) : (
                   <View style={styles.photoPlaceholder}>
-                    <Ionicons name="camera-outline" size={40} color="#FF6B6B" />
+                    <Ionicons name="camera-outline" size={40} color="#FF5E7E" />
                     <Text style={styles.photoText}>Add Photo</Text>
                   </View>
                 )}
@@ -282,14 +283,14 @@ export default function ProfileSetupScreen({ navigation, route }) {
           </>
         )}
       </ScrollView>
-    </View>
+    </AuroraBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#0B0B12',
   },
   scrollView: {
     flex: 1,
@@ -322,13 +323,13 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#161622',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
     marginBottom: 30,
     borderWidth: 2,
-    borderColor: '#FF6B6B',
+    borderColor: '#FF5E7E',
     overflow: 'hidden',
   },
   photo: {
@@ -342,17 +343,17 @@ const styles = StyleSheet.create({
   },
   photoText: {
     fontSize: 14,
-    color: '#FF6B6B',
+    color: '#FF5E7E',
     marginTop: 8,
     fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#161622',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: 'rgba(255,255,255,0.1)',
     marginBottom: 20,
     paddingHorizontal: 16,
     minHeight: 56,
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   nextButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
     borderRadius: 12,
     paddingVertical: 18,
     alignItems: 'center',
@@ -410,7 +411,7 @@ const styles = StyleSheet.create({
   backButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#FF6B6B',
+    borderColor: '#FF5E7E',
   },
   backButtonText: {
     color: '#FFFFFF',
@@ -418,8 +419,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   completeButton: {
-    backgroundColor: '#FF6B6B',
-    shadowColor: '#FF6B6B',
+    backgroundColor: '#FF5E7E',
+    shadowColor: '#FF5E7E',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
